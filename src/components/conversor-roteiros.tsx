@@ -11,12 +11,35 @@ import { baixarSRT, baixarZIP } from "@/lib/fileUtils";
 import { converterParaSRT, INTERVALO_ENTRE_ROTEIROS } from "@/lib/srtConverter";
 import type { Roteiro } from "@/types/roteiro";
 
+const STORAGE_KEY = "roteiros-salvos";
+
 export default function ConversorRoteiros() {
   const [roteiros, setRoteiros] = useState<Roteiro[]>([{ titulo: "", texto: "" }]);
   const [resultado, setResultado] = useState("");
   const sliderRef = useRef<HTMLDivElement>(null);
   const textareasRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
+  // 🔹 Carregar roteiros salvos no localStorage
+  useEffect(() => {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      try {
+        const parsed: Roteiro[] = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setRoteiros(parsed);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar roteiros salvos:", error);
+      }
+    }
+  }, []);
+
+  // 💾 Salvar roteiros no localStorage sempre que mudar
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(roteiros));
+  }, [roteiros]);
+
+  // ⏩ Scroll até o último card e foca no textarea ao adicionar
   useEffect(() => {
     const last = textareasRefs.current[roteiros.length - 1];
     if (sliderRef.current) {
@@ -43,6 +66,18 @@ export default function ConversorRoteiros() {
     });
 
     setResultado(srtFinal.trim());
+  };
+
+  // 🧼 Limpa apenas o resultado do SRT
+  const handleClearSRT = () => {
+    setResultado("");
+  };
+
+  // 🔁 Reseta os roteiros e o localStorage
+  const handleResetRoteiros = () => {
+    setRoteiros([{ titulo: "", texto: "" }]);
+    setResultado("");
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const contarPalavras = (texto: string) =>
@@ -134,23 +169,28 @@ export default function ConversorRoteiros() {
         + Adicionar Roteiro
       </Button>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button variant="secondary" onClick={() => baixarZIP(roteiros)}>
-          📦 Converter todos em TXT (ZIP)
-        </Button>
-        <Button onClick={converterTodos}>
-          🎬 Converter para SRT
+      <div className="flex flex-col sm:flex-row justify-between gap-2 mt-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <Button variant="secondary" onClick={() => baixarZIP(roteiros)}>
+            📦 Converter todos em TXT (ZIP)
+          </Button>
+          <Button onClick={converterTodos}>
+            🎬 Converter para SRT
+          </Button>
+        </div>
+        <Button variant="destructive" onClick={handleResetRoteiros}>
+          🔁 Resetar Roteiros
         </Button>
       </div>
 
       {resultado && (
         <>
-          <div className="flex justify-between gap-2 mt-2">
+          <div className="flex flex-col sm:flex-row justify-between gap-2 mt-2">
             <Button variant="default" onClick={() => baixarSRT(resultado)}>
               Download SRT
             </Button>
-            <Button variant="destructive" onClick={() => setRoteiros([{ titulo: "", texto: "" }])}>
-              Limpar
+            <Button variant="outline" onClick={handleClearSRT}>
+              🧼 Limpar SRT
             </Button>
           </div>
 
