@@ -197,7 +197,7 @@ export default function ConversorRoteiros() {
         <Checkbox
           id="salvarTitulo"
           checked={salvarSomenteTitulo}
-          onCheckedChange={(checked: any) => setSalvarSomenteTitulo(!!checked)}
+          onCheckedChange={(checked) => setSalvarSomenteTitulo(!!checked)}
         />
         <label htmlFor="salvarTitulo" className="text-sm select-none cursor-pointer">
           Salvar apenas título no TXT
