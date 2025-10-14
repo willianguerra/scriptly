@@ -112,79 +112,36 @@ export default function ConversorRoteiros() {
 
         {/* Slider */}
         <div
-          ref={sliderRef}
-          className="
-            grid grid-flow-col
-            auto-cols-[100%]
-            sm:auto-cols-[100%]
-            lg:auto-cols-[minmax(450px,1fr)]
-            overflow-x-auto
-            gap-4
-            scroll-smooth
-            snap-x snap-mandatory
-            px-4 pb-4
-          "
-        >
-          <AnimatePresence>
-            {roteiros.map((r, i) => (
-              <motion.div
-                key={i}
-                layout
-                initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 10, transition: { duration: 0.25 } }}
-                transition={{ duration: 0.3 }}
-                className="snap-center"
-              >
-                <Card className="border shadow-sm hover:shadow-md relative">
-                  <button
-                    onClick={() => handleRemove(i)}
-                    className="absolute top-2 right-2 p-1 rounded hover:bg-red-100 text-red-500"
-                    title="Excluir roteiro"
-                  >
-                    <Trash className="w-4 h-4" />
-                  </button>
+  ref={sliderRef}
+  className="
+    grid grid-flow-col
+    auto-cols-[100%]           /* mobile: 1 card */
+    sm:auto-cols-[100%]       
+    lg:auto-cols-[minmax(50%,1fr)]  /* desktop: 2 cards */
+    overflow-x-auto
+    gap-4
+    scroll-smooth
+    snap-x snap-mandatory
+    px-4 pb-4
+  "
+>
+  <AnimatePresence>
+    {roteiros.map((r, i) => (
+      <motion.div
+        key={i}
+        layout
+        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 10, transition: { duration: 0.25 } }}
+        transition={{ duration: 0.3 }}
+        className="snap-center"
+      >
+        {/* ... card ... */}
+      </motion.div>
+    ))}
+  </AnimatePresence>
+</div>
 
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex flex-col gap-1">
-                      <label className="font-medium text-sm">Título {i + 1}:</label>
-                      <Input
-                        value={r.titulo}
-                        onChange={(e) => {
-                          const novos = [...roteiros];
-                          novos[i].titulo = e.target.value;
-                          setRoteiros(novos);
-                        }}
-                        placeholder="Digite o título..."
-                        className="text-sm"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <label className="font-medium text-sm">Roteiro {i + 1}:</label>
-                      <Textarea
-                        ref={(el) => {
-                          textareasRefs.current[i] = el;
-                        }}
-                        value={r.texto}
-                        onChange={(e) => {
-                          const novos = [...roteiros];
-                          novos[i].texto = e.target.value;
-                          setRoteiros(novos);
-                        }}
-                        className="w-full h-28 resize-none text-sm"
-                        placeholder="Digite seu roteiro..."
-                      />
-                      <div className="text-xs text-muted-foreground text-right">
-                        {contarPalavras(r.texto)} palavras — {r.texto.length} caracteres
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
 
         {/* ➡️ Botão direito - só aparece no desktop */}
         <button
