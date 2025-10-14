@@ -247,7 +247,7 @@ export default function ConversorRoteiros() {
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        <motion.div
+        <div
           ref={sliderRef}
           className="
             grid grid-flow-col
@@ -261,11 +261,7 @@ export default function ConversorRoteiros() {
             px-2 sm:px-4
             pb-4
             flex-1
-            cursor-grab active:cursor-grabbing
           "
-          drag="x"
-          dragConstraints={{ left: -5000, right: 0 }}
-          dragElastic={0.2}
         >
           <AnimatePresence>
             {roteiros.map((r, i) => (
@@ -326,7 +322,7 @@ export default function ConversorRoteiros() {
               </motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
 
         <button
           onClick={scrollRight}
