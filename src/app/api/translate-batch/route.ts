@@ -2,6 +2,7 @@ import axios from "axios";
 import { NextResponse } from "next/server";
 
 const SERVERS = [
+  "https://libretranslate-rm2k.onrender.com/translate",
   "https://translate.astian.org/translate",
   "https://translate.argosopentech.com/translate",
   "https://libretranslate.com/translate",
