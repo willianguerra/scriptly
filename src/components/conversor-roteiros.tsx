@@ -105,7 +105,7 @@ export default function ConversorRoteiros() {
         {/* ⬅️ Botão esquerdo - só aparece no desktop */}
         <button
           onClick={scrollLeft}
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition"
+          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition z-1"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -136,7 +136,51 @@ export default function ConversorRoteiros() {
         transition={{ duration: 0.3 }}
         className="snap-center"
       >
-        {/* ... card ... */}
+                <Card className="border shadow-sm hover:shadow-md relative">
+                  <button
+                    onClick={() => handleRemove(i)}
+                    className="absolute top-2 right-2 p-1 rounded hover:bg-red-100 text-red-500"
+                    title="Excluir roteiro"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="font-medium text-sm">Título {i + 1}:</label>
+                      <Input
+                        value={r.titulo}
+                        onChange={(e) => {
+                          const novos = [...roteiros];
+                          novos[i].titulo = e.target.value;
+                          setRoteiros(novos);
+                        }}
+                        placeholder="Digite o título..."
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="font-medium text-sm">Roteiro {i + 1}:</label>
+                      <Textarea
+                        ref={(el) => {
+                          textareasRefs.current[i] = el;
+                        }}
+                        value={r.texto}
+                        onChange={(e) => {
+                          const novos = [...roteiros];
+                          novos[i].texto = e.target.value;
+                          setRoteiros(novos);
+                        }}
+                        className="w-full h-28 resize-none text-sm"
+                        placeholder="Digite seu roteiro..."
+                      />
+                      <div className="text-xs text-muted-foreground text-right">
+                        {contarPalavras(r.texto)} palavras — {r.texto.length} caracteres
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
       </motion.div>
     ))}
   </AnimatePresence>
