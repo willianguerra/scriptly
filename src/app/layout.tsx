@@ -17,22 +17,25 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
 export const metadata: Metadata = {
   title: {
-    default: "Next.js Sisp Test",
-    template: "%s | Next.js Sisp Test",
+    default: "Scriptly",
+    template: "%s | Scriptly",
   },
   description:
-    "A reusable Sisp Test component for Next.js with TypeScript, Tailwind CSS, and react-hook-form. Upload, preview, and delete images with ease.",
+    "Scriptly é uma plataforma prática e intuitiva para criar, editar e converter roteiros em legendas (SRT), além de gerar arquivos TXT organizados — tudo com suporte responsivo e rápido.",
   keywords: [
+    "Scriptly",
+    "Conversor SRT",
+    "Análise de roteiros",
+    "Legenda automática",
     "Next.js",
-    "Sisp Test",
     "TypeScript",
     "Tailwind CSS",
-    "react-hook-form",
     "shadcn/ui",
-    "image upload",
+    "Roteiro",
+    "Subtitles",
+    "Video tools",
   ],
   authors: [{ name: "willianguerra", url: "https://github.com/willianguerra" }],
   creator: "willianguerra",
@@ -43,28 +46,28 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "Next.js Sisp Test",
+    title: "Scriptly",
     description:
-      "Easily upload multiple images with a responsive, type-safe component built for Next.js.",
+      "Crie, edite e converta roteiros em legendas SRT ou arquivos TXT de forma simples, rápida e organizada com o Scriptly.",
     url: "https://github.com/willianguerra/converter",
-    siteName: "Next.js Sisp Test",
+    siteName: "Scriptly",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Next.js Sisp Test Preview",
+        alt: "Scriptly Preview",
       },
     ],
-    locale: "en_US",
+    locale: "pt_BR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Next.js Sisp Test",
+    title: "Scriptly",
     description:
-      "A reusable Sisp Test component for Next.js with TypeScript and Tailwind CSS.",
-    creator: "@jacksonkasi11",
+      "Crie e converta roteiros em legendas SRT e arquivos TXT com facilidade — Scriptly.",
+    creator: "@willianguerra",
     images: ["/og-image.png"],
   },
   robots: {
@@ -84,6 +87,7 @@ export const metadata: Metadata = {
     apple: "/favicon.ico",
   },
 };
+
 
 export default function RootLayout({
   children,
