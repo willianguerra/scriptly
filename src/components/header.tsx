@@ -19,11 +19,11 @@ export const Header: React.FC = () => {
     <header className="w-full">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
         {/* Logo */}
-        <div className="flex items-center gap-2">
+        <Link href={'/'} className="flex items-center gap-2">
           <ImageIcon className="h-6 w-6 text-foreground" />
           {/* <span className="text-lg font-semibold text-foreground">Video Converter</span> */}
           <span className="text-lg font-semibold text-foreground">Uploader</span>
-        </div>
+        </Link>
 
         {/* GitHub Link & Theme Toggle */}
 
