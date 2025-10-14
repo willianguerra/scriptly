@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { baixarSRT, baixarZIP } from "@/lib/fileUtils";
@@ -16,6 +17,7 @@ const STORAGE_KEY = "roteiros-salvos";
 export default function ConversorRoteiros() {
   const [roteiros, setRoteiros] = useState<Roteiro[]>([{ titulo: "", texto: "" }]);
   const [resultado, setResultado] = useState("");
+  const [salvarSomenteTitulo, setSalvarSomenteTitulo] = useState(false); // 👈 novo estado
   const sliderRef = useRef<HTMLDivElement>(null);
   const textareasRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
@@ -48,17 +50,12 @@ export default function ConversorRoteiros() {
     setTimeout(() => last?.focus(), 250);
   }, [roteiros.length]);
 
-  // ⬅️➡️ Funções de scroll no desktop
   const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -400, behavior: "smooth" });
-    }
+    sliderRef.current?.scrollBy({ left: -400, behavior: "smooth" });
   };
 
   const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 400, behavior: "smooth" });
-    }
+    sliderRef.current?.scrollBy({ left: 400, behavior: "smooth" });
   };
 
   const handleRemove = (index: number) => {
@@ -101,41 +98,33 @@ export default function ConversorRoteiros() {
     <div className="w-full p-4 flex flex-col gap-4">
       <h1 className="text-2xl font-bold mb-2 text-center">Conversor de Roteiros</h1>
 
-      <div className="relative w-full">
-        {/* ⬅️ Botão esquerdo - só aparece no desktop */}
-        <button
-          onClick={scrollLeft}
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition z-10"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-
-        {/* Slider */}
+      {/* === Slider === */}
+      <div className="w-full">
         <div
-  ref={sliderRef}
-  className="
-    grid grid-flow-col
-    auto-cols-[100%]           /* mobile: 1 card */
-    sm:auto-cols-[100%]       
-    lg:auto-cols-[minmax(50%,1fr)]  /* desktop: 2 cards */
-    overflow-x-auto
-    gap-4
-    scroll-smooth
-    snap-x snap-mandatory
-    px-4 pb-4
-  "
->
-  <AnimatePresence>
-    {roteiros.map((r, i) => (
-      <motion.div
-        key={i}
-        layout
-        initial={{ opacity: 0, scale: 0.9, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.8, y: 10, transition: { duration: 0.25 } }}
-        transition={{ duration: 0.3 }}
-        className="snap-center"
-      >
+          ref={sliderRef}
+          className="
+            grid grid-flow-col
+            auto-cols-[100%]
+            sm:auto-cols-[100%]
+            lg:auto-cols-[minmax(50%,1fr)]
+            overflow-x-auto
+            gap-4
+            scroll-smooth
+            snap-x snap-mandatory
+            px-4 pb-4
+          "
+        >
+          <AnimatePresence>
+            {roteiros.map((r, i) => (
+              <motion.div
+                key={i}
+                layout
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 10, transition: { duration: 0.25 } }}
+                transition={{ duration: 0.3 }}
+                className="snap-center"
+              >
                 <Card className="border shadow-sm hover:shadow-md relative">
                   <button
                     onClick={() => handleRemove(i)}
@@ -181,21 +170,41 @@ export default function ConversorRoteiros() {
                     </div>
                   </CardContent>
                 </Card>
-      </motion.div>
-    ))}
-  </AnimatePresence>
-</div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
 
-
-        {/* ➡️ Botão direito - só aparece no desktop */}
-        <button
-          onClick={scrollRight}
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
+        {/* === Botões abaixo do slider === */}
+        <div className="hidden md:flex justify-center gap-4 mt-2">
+          <button
+            onClick={scrollLeft}
+            className="bg-background border rounded-full p-2 shadow hover:bg-accent transition"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={scrollRight}
+            className="bg-background border rounded-full p-2 shadow hover:bg-accent transition"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
+      {/* === Checkbox salvar apenas título === */}
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="salvarTitulo"
+          checked={salvarSomenteTitulo}
+          onCheckedChange={(checked: any) => setSalvarSomenteTitulo(!!checked)}
+        />
+        <label htmlFor="salvarTitulo" className="text-sm select-none cursor-pointer">
+          Salvar apenas título no TXT
+        </label>
+      </div>
+
+      {/* === Botões de ações === */}
       <Button
         variant="outline"
         onClick={() => setRoteiros([...roteiros, { titulo: "", texto: "" }])}
@@ -205,7 +214,10 @@ export default function ConversorRoteiros() {
 
       <div className="flex flex-col sm:flex-row justify-between gap-2 mt-2">
         <div className="flex flex-col sm:flex-row gap-2 w-full">
-          <Button variant="secondary" onClick={() => baixarZIP(roteiros)}>
+          <Button
+            variant="secondary"
+            onClick={() => baixarZIP(roteiros, salvarSomenteTitulo)} // 👈 flag passada
+          >
             📦 Converter todos em TXT (ZIP)
           </Button>
           <Button onClick={converterTodos}>
