@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Image as ImageIcon, Menu } from "lucide-react";
+import { Image as ImageIcon, Menu, FileText, Brain, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -23,11 +23,17 @@ export const Header: React.FC = () => {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <ImageIcon className="h-6 w-6 text-foreground" />
-          <span className="text-lg font-semibold text-foreground">Uploader</span>
+          <span className="text-lg font-semibold text-foreground">Scriptly</span>
         </Link>
 
         {/* Links Desktop */}
         <div className="hidden md:flex items-center gap-4">
+          <Link
+            href="/"
+            className="text-sm font-medium text-foreground hover:text-primary transition"
+          >
+            Início
+          </Link>
           <Link
             href="/converter_srt"
             className="text-sm font-medium text-foreground hover:text-primary transition"
@@ -77,24 +83,29 @@ export const Header: React.FC = () => {
                   <Link href="/">
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground"
+                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground gap-2"
                     >
+                      <Home className="w-5 h-5" />
                       Início
                     </Button>
                   </Link>
+
                   <Link href="/converter_srt">
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground"
+                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground gap-2"
                     >
+                      <FileText className="w-5 h-5" />
                       Conversor SRT
                     </Button>
                   </Link>
+
                   <Link href="/analysis_script">
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground"
+                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground gap-2"
                     >
+                      <Brain className="w-5 h-5" />
                       Análise de Roteiros
                     </Button>
                   </Link>
@@ -102,9 +113,9 @@ export const Header: React.FC = () => {
 
                 <Separator className="my-4" />
 
-                <div className="mt-auto flex flex-col items-center gap-2 text-sm text-muted-foreground pb-2">
-                  <span>🌟 Ferramentas criadas com ❤️</span>
-                  <span>© {new Date().getFullYear()} Uploader</span>
+                <div className="mt-auto flex flex-col items-center gap-1 text-sm text-muted-foreground pb-2">
+                  <span>🌟 Ferramentas criadas com ❤️ - warlittle</span>
+                  <span>© {new Date().getFullYear()} Scriptly</span>
                 </div>
               </motion.div>
             </SheetContent>

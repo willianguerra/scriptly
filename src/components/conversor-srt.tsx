@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { size } from "zod";
 
 // --- Constantes
 const CARACTERES_POR_BLOCO = 500;
@@ -239,10 +238,6 @@ export function ConversorSRT() {
           </Card>
         </>
       )}
-
-      <footer className="mt-auto text-center text-sm text-muted-foreground">
-        Desenvolvido por Meusovo
-      </footer>
     </div>
   );
 }

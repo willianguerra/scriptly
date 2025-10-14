@@ -48,8 +48,16 @@ export default function ConversorRoteiros() {
     setTimeout(() => last?.focus(), 250);
   }, [roteiros.length]);
 
-  const handleRemove = (index: number) =>
+  const handleRemove = (index: number) => {
+    // Se só existir 1 roteiro, limpa em vez de remover
+    if (roteiros.length === 1) {
+      setRoteiros([{ titulo: "", texto: "" }]);
+      return;
+    }
+
+    // Se houver mais de 1, remove normalmente
     setRoteiros((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const converterTodos = () => {
     let srtFinal = "";
