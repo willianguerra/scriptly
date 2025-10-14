@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { ChevronLeft, ChevronRight, Trash } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CARACTERES_POR_BLOCO = 500;
 const PALAVRAS_MAX_BLOCO = 100;
@@ -28,6 +30,40 @@ interface ResultadoConversao {
 export default function ConversorRoteiros() {
   const [roteiros, setRoteiros] = useState<Roteiro[]>([{ titulo: "", texto: "" }]);
   const [resultado, setResultado] = useState("");
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const textareasRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+
+  const scrollLeft = () => {
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: -500, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: 500, behavior: "smooth" });
+  };
+
+  // Foca no último campo + scroll suave
+  useEffect(() => {
+    if (roteiros.length > 0) {
+      const lastIndex = roteiros.length - 1;
+      const lastTextarea = textareasRefs.current[lastIndex];
+
+      if (sliderRef.current) {
+        sliderRef.current.scrollTo({
+          left: sliderRef.current.scrollWidth,
+          behavior: "smooth",
+        });
+      }
+
+      // pequeno timeout para focar após a animação
+      setTimeout(() => {
+        if (lastTextarea) lastTextarea.focus();
+      }, 250);
+    }
+  }, [roteiros.length]);
+
+  const handleRemove = (index: number) => {
+    setRoteiros((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const pad = (n: number, size = 2) => n.toString().padStart(size, "0");
 
@@ -170,10 +206,8 @@ export default function ConversorRoteiros() {
     return srtFinal.trim();
   };
 
-  // 📦 ZIP com nomes numéricos (1.txt, 2.txt...)
   const handleDownloadZIP = async () => {
     const zip = new JSZip();
-
     roteiros.forEach((r, index) => {
       const numero = index + 1;
       const titulo = r.titulo.trim() || `Roteiro ${numero}`;
@@ -205,44 +239,95 @@ export default function ConversorRoteiros() {
 
   return (
     <div className="w-full p-6 flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">Conversor de Roteiros</h1>
+      <h1 className="text-2xl font-bold mb-2">Conversor de Roteiros</h1>
 
-      <div className="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto">
-        {roteiros.map((r, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex flex-col gap-2">
-                <label className="font-medium">Título {i + 1}:</label>
-                <Input
-                  value={r.titulo}
-                  onChange={(e) => {
-                    const novos = [...roteiros];
-                    novos[i].titulo = e.target.value;
-                    setRoteiros(novos);
-                  }}
-                  placeholder="Digite o título..."
-                />
-              </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={scrollLeft}
+          className="bg-background border p-2 rounded-full shadow hover:bg-accent transition"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
 
-              <div className="flex flex-col gap-2">
-                <label className="font-medium">Roteiro {i + 1}:</label>
-                <Textarea
-                  value={r.texto}
-                  onChange={(e) => {
-                    const novos = [...roteiros];
-                    novos[i].texto = e.target.value;
-                    setRoteiros(novos);
-                  }}
-                  className="w-full h-40 resize-none"
-                  placeholder="Digite seu roteiro..."
-                />
-                <div className="text-sm text-muted-foreground text-right">
-                  {contarPalavras(r.texto)} palavras — {r.texto.length} caracteres
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <div
+          ref={sliderRef}
+          className="
+            grid grid-flow-col
+            auto-cols-[minmax(300px,1fr)]
+            lg:auto-cols-[minmax(450px,1fr)]
+            overflow-x-auto
+            gap-4
+            scroll-smooth
+            pb-4
+            flex-1
+          "
+        >
+          <AnimatePresence>
+            {roteiros.map((r, i) => (
+              <motion.div
+                key={i}
+                layout
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 10, transition: { duration: 0.25 } }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border shadow-sm hover:shadow-md relative">
+                  <button
+                    onClick={() => handleRemove(i)}
+                    className="absolute top-2 right-2 p-1 rounded hover:bg-red-100 text-red-500"
+                    title="Excluir roteiro"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="font-medium text-sm">Título {i + 1}:</label>
+                      <Input
+                        value={r.titulo}
+                        onChange={(e) => {
+                          const novos = [...roteiros];
+                          novos[i].titulo = e.target.value;
+                          setRoteiros(novos);
+                        }}
+                        placeholder="Digite o título..."
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="font-medium text-sm">Roteiro {i + 1}:</label>
+                      <Textarea
+                        ref={(el) => {
+                          textareasRefs.current[i] = el;
+                        }}
+                        value={r.texto}
+                        onChange={(e) => {
+                          const novos = [...roteiros];
+                          novos[i].texto = e.target.value;
+                          setRoteiros(novos);
+                        }}
+                        className="w-full h-28 resize-none text-sm"
+                        placeholder="Digite seu roteiro..."
+                      />
+                      <div className="text-xs text-muted-foreground text-right">
+                        {contarPalavras(r.texto)} palavras — {r.texto.length} caracteres
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        <button
+          onClick={scrollRight}
+          className="bg-background border p-2 rounded-full shadow hover:bg-accent transition"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
 
       <Button
@@ -273,7 +358,7 @@ export default function ConversorRoteiros() {
           </div>
 
           <Card>
-            <CardContent className="p-4 whitespace-pre-wrap bg-muted">
+            <CardContent className="p-4 whitespace-pre-wrap bg-muted max-h-60 overflow-auto">
               {resultado}
             </CardContent>
           </Card>

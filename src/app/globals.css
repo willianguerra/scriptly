@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
 :root {
   --background: oklch(0.9940 0 0);
   --foreground: oklch(0 0 0);
@@ -173,13 +174,23 @@
 body {
   letter-spacing: var(--tracking-normal);
 }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
+  ::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #999;
+    border-radius: 4px;
+  }
+
 }
-
-
