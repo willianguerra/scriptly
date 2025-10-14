@@ -105,7 +105,7 @@ export default function ConversorRoteiros() {
         {/* ⬅️ Botão esquerdo - só aparece no desktop */}
         <button
           onClick={scrollLeft}
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition z-1"
+          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition z-10"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
