@@ -41,7 +41,6 @@ export default function ConversorRoteiros() {
     if (sliderRef.current) sliderRef.current.scrollBy({ left: 500, behavior: "smooth" });
   };
 
-  // Foca no último campo + scroll suave
   useEffect(() => {
     if (roteiros.length > 0) {
       const lastIndex = roteiros.length - 1;
@@ -54,7 +53,6 @@ export default function ConversorRoteiros() {
         });
       }
 
-      // pequeno timeout para focar após a animação
       setTimeout(() => {
         if (lastTextarea) lastTextarea.focus();
       }, 250);
@@ -238,29 +236,36 @@ export default function ConversorRoteiros() {
     texto.trim().length === 0 ? 0 : texto.trim().split(/\s+/).length;
 
   return (
-    <div className="w-full p-6 flex flex-col gap-4">
-      <h1 className="text-2xl font-bold mb-2">Conversor de Roteiros</h1>
+    <div className="w-full p-4 flex flex-col gap-4">
+      <h1 className="text-2xl font-bold mb-2 text-center">Conversor de Roteiros</h1>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-center gap-2 sm:gap-4">
         <button
           onClick={scrollLeft}
-          className="bg-background border p-2 rounded-full shadow hover:bg-accent transition"
+          className="bg-background border p-1 sm:p-2 rounded-full shadow hover:bg-accent transition -ml-2 sm:-ml-4"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        <div
+        <motion.div
           ref={sliderRef}
           className="
             grid grid-flow-col
-            auto-cols-[minmax(300px,1fr)]
+            auto-cols-[90%]
+            sm:auto-cols-[80%]
             lg:auto-cols-[minmax(450px,1fr)]
             overflow-x-auto
             gap-4
             scroll-smooth
+            snap-x snap-mandatory
+            px-2 sm:px-4
             pb-4
             flex-1
+            cursor-grab active:cursor-grabbing
           "
+          drag="x"
+          dragConstraints={{ left: -5000, right: 0 }}
+          dragElastic={0.2}
         >
           <AnimatePresence>
             {roteiros.map((r, i) => (
@@ -271,6 +276,7 @@ export default function ConversorRoteiros() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 10, transition: { duration: 0.25 } }}
                 transition={{ duration: 0.3 }}
+                className="snap-center"
               >
                 <Card className="border shadow-sm hover:shadow-md relative">
                   <button
@@ -320,13 +326,13 @@ export default function ConversorRoteiros() {
               </motion.div>
             ))}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         <button
           onClick={scrollRight}
-          className="bg-background border p-2 rounded-full shadow hover:bg-accent transition"
+          className="bg-background border p-1 sm:p-2 rounded-full shadow hover:bg-accent transition -mr-2 sm:-mr-4"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
