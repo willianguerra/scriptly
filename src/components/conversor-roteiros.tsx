@@ -11,13 +11,35 @@ import { baixarSRT, baixarZIP } from "@/lib/fileUtils";
 import { converterParaSRT, INTERVALO_ENTRE_ROTEIROS } from "@/lib/srtConverter";
 import type { Roteiro } from "@/types/roteiro";
 
+const STORAGE_KEY = "roteiros-salvos";
+
 export default function ConversorRoteiros() {
   const [roteiros, setRoteiros] = useState<Roteiro[]>([{ titulo: "", texto: "" }]);
   const [resultado, setResultado] = useState("");
   const sliderRef = useRef<HTMLDivElement>(null);
   const textareasRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
-  // 🔸 Auto scroll + focus no novo card
+  // 🧠 Carregar roteiros do localStorage
+  useEffect(() => {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      try {
+        const parsed: Roteiro[] = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setRoteiros(parsed);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar roteiros salvos:", error);
+      }
+    }
+  }, []);
+
+  // 💾 Salvar roteiros no localStorage sempre que mudar
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(roteiros));
+  }, [roteiros]);
+
+  // 📌 Scroll até o último card ao adicionar novo roteiro
   useEffect(() => {
     const last = textareasRefs.current[roteiros.length - 1];
     if (sliderRef.current) {
@@ -26,7 +48,7 @@ export default function ConversorRoteiros() {
     setTimeout(() => last?.focus(), 250);
   }, [roteiros.length]);
 
-  // 🔸 Scroll do slider no desktop
+  // ⬅️➡️ Funções de scroll no desktop
   const scrollLeft = () => {
     if (sliderRef.current) {
       sliderRef.current.scrollBy({ left: -400, behavior: "smooth" });
@@ -39,7 +61,6 @@ export default function ConversorRoteiros() {
     }
   };
 
-  // 🔸 Não remove o último — reseta
   const handleRemove = (index: number) => {
     if (roteiros.length === 1) {
       setRoteiros([{ titulo: "", texto: "" }]);
@@ -48,7 +69,6 @@ export default function ConversorRoteiros() {
     setRoteiros((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // 🔸 Converter todos para SRT
   const converterTodos = () => {
     let srtFinal = "";
     let contador = 1;
@@ -66,6 +86,14 @@ export default function ConversorRoteiros() {
     setResultado(srtFinal.trim());
   };
 
+  const handleClearSRT = () => setResultado("");
+
+  const handleResetRoteiros = () => {
+    setRoteiros([{ titulo: "", texto: "" }]);
+    setResultado("");
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
   const contarPalavras = (texto: string) =>
     texto.trim() ? texto.trim().split(/\s+/).length : 0;
 
@@ -73,8 +101,8 @@ export default function ConversorRoteiros() {
     <div className="w-full p-4 flex flex-col gap-4">
       <h1 className="text-2xl font-bold mb-2 text-center">Conversor de Roteiros</h1>
 
-      {/* 🔸 Botões de navegação só no desktop */}
       <div className="relative w-full">
+        {/* ⬅️ Botão esquerdo - só aparece no desktop */}
         <button
           onClick={scrollLeft}
           className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition"
@@ -82,7 +110,7 @@ export default function ConversorRoteiros() {
           <ChevronLeft className="w-5 h-5" />
         </button>
 
-        {/* 🔸 Slider */}
+        {/* Slider */}
         <div
           ref={sliderRef}
           className="
@@ -92,9 +120,9 @@ export default function ConversorRoteiros() {
             lg:auto-cols-[minmax(450px,1fr)]
             overflow-x-auto
             gap-4
+            scroll-smooth
             snap-x snap-mandatory
             px-4 pb-4
-            scroll-smooth
           "
         >
           <AnimatePresence>
@@ -158,6 +186,7 @@ export default function ConversorRoteiros() {
           </AnimatePresence>
         </div>
 
+        {/* ➡️ Botão direito - só aparece no desktop */}
         <button
           onClick={scrollRight}
           className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 bg-background border rounded-full p-2 shadow hover:bg-accent transition"
@@ -166,7 +195,6 @@ export default function ConversorRoteiros() {
         </button>
       </div>
 
-      {/* 🔸 Botões de ação */}
       <Button
         variant="outline"
         onClick={() => setRoteiros([...roteiros, { titulo: "", texto: "" }])}
@@ -174,23 +202,28 @@ export default function ConversorRoteiros() {
         + Adicionar Roteiro
       </Button>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button variant="secondary" onClick={() => baixarZIP(roteiros)}>
-          📦 Converter todos em TXT (ZIP)
-        </Button>
-        <Button onClick={converterTodos}>
-          🎬 Converter para SRT
+      <div className="flex flex-col sm:flex-row justify-between gap-2 mt-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <Button variant="secondary" onClick={() => baixarZIP(roteiros)}>
+            📦 Converter todos em TXT (ZIP)
+          </Button>
+          <Button onClick={converterTodos}>
+            🎬 Converter para SRT
+          </Button>
+        </div>
+        <Button variant="destructive" onClick={handleResetRoteiros}>
+          🔁 Resetar Roteiros
         </Button>
       </div>
 
       {resultado && (
         <>
-          <div className="flex justify-between gap-2 mt-2">
+          <div className="flex flex-col sm:flex-row justify-between gap-2 mt-2">
             <Button variant="default" onClick={() => baixarSRT(resultado)}>
               Download SRT
             </Button>
-            <Button variant="destructive" onClick={() => setResultado("")}>
-              Limpar SRT
+            <Button variant="outline" onClick={handleClearSRT}>
+              🧼 Limpar SRT
             </Button>
           </div>
 
