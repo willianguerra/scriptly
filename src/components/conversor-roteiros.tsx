@@ -56,8 +56,8 @@ export default function ConversorRoteiros() {
         ref={sliderRef}
         className="
           grid grid-flow-col
-          auto-cols-[90%]
-          sm:auto-cols-[80%]
+          auto-cols-[100%]
+          sm:auto-cols-[100%]
           lg:auto-cols-[minmax(450px,1fr)]
           overflow-x-auto
           gap-4
