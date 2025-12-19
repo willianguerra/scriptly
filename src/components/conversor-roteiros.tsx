@@ -139,14 +139,21 @@ export default function ConversorRoteiros() {
                       <label className="font-medium text-sm">Título {i + 1}:</label>
                       <Input
                         value={r.titulo}
+                        aria-invalid={r.titulo.length > 100}
                         onChange={(e) => {
                           const novos = [...roteiros];
                           novos[i].titulo = e.target.value;
                           setRoteiros(novos);
                         }}
                         placeholder="Digite o título..."
-                        className="text-sm"
+                        className={`text-sm ${r.titulo.length > 100
+                          ? "border-red-500 focus-visible:ring-red-500 focus-visible:ring-2"
+                          : ""
+                          }`}
                       />
+                      <div className={`text-xs text-right ${r.titulo.length > 100 ? "text-red-400" : "text-muted-foreground"}`}>
+                        {r.titulo.length} caracteres (máx. 100)
+                      </div>
                     </div>
 
                     <div className="flex flex-col gap-1">
