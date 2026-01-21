@@ -46,6 +46,12 @@ export const Header: React.FC = () => {
           >
             Análise Roteiros
           </Link>
+          <Link
+            href="/check_videos"
+            className="text-sm font-medium text-foreground hover:text-primary transition"
+          >
+            Check Vídeos
+          </Link>
           <ThemeToggleButton />
         </div>
 
