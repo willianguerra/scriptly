@@ -79,10 +79,10 @@ export default function SincronizacaoDottiPage() {
       setProgress(100);
       setStatus("done");
       setResultTxt(buildConsoleOutput(file.name, txt));
-    } catch (e: any) {
+    } catch (e) {
       setStatus("error");
       setProgress(0);
-      setErrorMsg(e?.message ?? "Erro ao processar.");
+      setErrorMsg("Erro ao processar.");
     }
   }
 
