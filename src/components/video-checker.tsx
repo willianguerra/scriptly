@@ -19,20 +19,32 @@ export default function VideoDePara() {
   const [files, setFiles] = React.useState<File[]>([]);
 
   const summary = React.useMemo(() => {
-    const nums = files
-      .map((f) => extractIndexFromFilename(f.name))
-      .filter((n): n is number => typeof n === "number" && Number.isInteger(n));
+    const numberToFiles = new Map<number, string[]>();
 
-    const unique = new Set(nums);
+    for (const file of files) {
+      const n = extractIndexFromFilename(file.name);
+      if (typeof n !== "number" || !Number.isInteger(n)) continue;
+
+      const filenames = numberToFiles.get(n) ?? [];
+      filenames.push(file.name);
+      numberToFiles.set(n, filenames);
+    }
+
+    const unique = new Set(numberToFiles.keys());
 
     const missing: number[] = [];
     for (let i = 1; i <= expectedTotal; i++) {
       if (!unique.has(i)) missing.push(i);
     }
 
+    const duplicates = Array.from(numberToFiles.entries())
+      .filter(([, filenames]) => filenames.length > 1)
+      .sort(([a], [b]) => a - b)
+      .map(([n, filenames]) => `${n}: ${filenames.join(", ")}`);
+
     return `Informei ${expectedTotal} vídeos.\n\nFaltantes: ${
       missing.length ? missing.join(", ") : "Nenhum"
-    }`;
+    }\n\nDuplicados: ${duplicates.length ? duplicates.join("\n") : "Nenhum"}`;
   }, [files, expectedTotal]);
 
   return (
