@@ -12,9 +12,6 @@ import {
   Link2,
   Tag,
   Wand2,
-  BadgeDollarSign,
-  QrCode,
-  KeyRound,
   Split,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,9 +33,6 @@ const mainTools = [
 
 const secondaryTools = [
   { href: "/upscaleimage", label: "Upscale de Imagem", icon: Wand2 },
-  { href: "/juros", label: "Calculadora de Juros", icon: BadgeDollarSign },
-  { href: "/pix", label: "QR Code PIX", icon: QrCode },
-  { href: "/senha", label: "Gerador de Senha", icon: KeyRound },
 ];
 
 export default function TecxpShell({ children }: TecxpShellProps) {
