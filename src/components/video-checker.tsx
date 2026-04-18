@@ -40,7 +40,7 @@ export default function VideoDePara() {
     const duplicates = Array.from(numberToFiles.entries())
       .filter(([, filenames]) => filenames.length > 1)
       .sort(([a], [b]) => a - b)
-      .map(([n, filenames]) => `${n}: ${filenames.join(", ")}`);
+      .map(([n, filenames]) => `${n} (${filenames.length})`);
 
     return `Informei ${expectedTotal} vídeos.\n\nFaltantes: ${
       missing.length ? missing.join(", ") : "Nenhum"

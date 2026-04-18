@@ -1,7 +1,16 @@
 "use client";
 
 import React from "react";
-import { Image as ImageIcon, Menu, FileText, Brain, Home } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Menu,
+  FileText,
+  Brain,
+  Home,
+  Link2,
+  Sparkles,
+  Type,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -51,6 +60,24 @@ export const Header: React.FC = () => {
             className="text-sm font-medium text-foreground hover:text-primary transition"
           >
             Check Vídeos
+          </Link>
+          <Link
+            href="/linkinscricao"
+            className="text-sm font-medium text-foreground hover:text-primary transition"
+          >
+            Link Inscricao
+          </Link>
+          <Link
+            href="/upscaleimage"
+            className="text-sm font-medium text-foreground hover:text-primary transition"
+          >
+            Upscale Image
+          </Link>
+          <Link
+            href="/contadorcaracteres"
+            className="text-sm font-medium text-foreground hover:text-primary transition"
+          >
+            Contador
           </Link>
           <ThemeToggleButton />
         </div>
@@ -113,6 +140,35 @@ export const Header: React.FC = () => {
                     >
                       <Brain className="w-5 h-5" />
                       Análise de Roteiros
+                    </Button>
+                  </Link>
+                  <Link href="/linkinscricao">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground gap-2"
+                    >
+                      <Link2 className="w-5 h-5" />
+                      Link Inscricao
+                    </Button>
+                  </Link>
+
+                  <Link href="/upscaleimage">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground gap-2"
+                    >
+                      <Sparkles className="w-5 h-5" />
+                      Upscale Image
+                    </Button>
+                  </Link>
+
+                  <Link href="/contadorcaracteres">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-base font-medium hover:bg-accent hover:text-accent-foreground gap-2"
+                    >
+                      <Type className="w-5 h-5" />
+                      Contador
                     </Button>
                   </Link>
                 </nav>

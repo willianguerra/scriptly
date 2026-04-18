@@ -1,12 +1,10 @@
 import React from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ToastContainer } from 'react-toastify';
 import { ThemeProvider } from "next-themes";
 
 import "./globals.css";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
+import AppShell from "@/components/app-shell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,10 +97,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>
     </html>
