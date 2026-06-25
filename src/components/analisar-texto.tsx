@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { Scissors } from "lucide-react";
 
 export function AnalisarTexto() {
   const [texto, setTexto] = useState("");
@@ -12,12 +14,15 @@ export function AnalisarTexto() {
   const contarLinhas = texto.split(/\r\n|\r|\n/).length;
 
   return (
-    <div className="w-full p-6 flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-5">
+      <PageHeader
+        icon={Scissors}
+        title="Analisador de Texto"
+        description="Visualize rapidamente caracteres, palavras e linhas do seu texto."
+      />
+
       <Card>
-        <CardHeader>
-          <CardTitle>Analisador de Texto</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4">
           <Textarea
             placeholder="Digite ou cole seu texto aqui..."
             value={texto}
@@ -25,22 +30,22 @@ export function AnalisarTexto() {
             className="min-h-[200px]"
           />
 
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="p-4 rounded bg-muted">
-              <p className="text-lg font-bold">{contarCaracteres}</p>
-              <p className="text-sm text-muted-foreground">Caracteres</p>
-            </div>
-            <div className="p-4 rounded bg-muted">
-              <p className="text-lg font-bold">{contarPalavras}</p>
-              <p className="text-sm text-muted-foreground">Palavras</p>
-            </div>
-            <div className="p-4 rounded bg-muted">
-              <p className="text-lg font-bold">{contarLinhas}</p>
-              <p className="text-sm text-muted-foreground">Linhas</p>
-            </div>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <Metric value={contarCaracteres} label="Caracteres" />
+            <Metric value={contarPalavras} label="Palavras" />
+            <Metric value={contarLinhas} label="Linhas" />
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function Metric({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="rounded-lg border bg-muted/50 p-4">
+      <p className="text-2xl font-semibold">{value}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   );
 }

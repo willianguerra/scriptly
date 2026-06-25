@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash, ChevronLeft, ChevronRight, Clapperboard } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { motion, AnimatePresence } from "framer-motion";
 import { baixarSRT, baixarZIP } from "@/lib/fileUtils";
 import { converterParaSRT, INTERVALO_ENTRE_ROTEIROS } from "@/lib/srtConverter";
@@ -95,8 +96,12 @@ export default function ConversorRoteiros() {
     texto.trim() ? texto.trim().split(/\s+/).length : 0;
 
   return (
-    <div className="w-full p-4 flex flex-col gap-4">
-      <h1 className="text-2xl font-bold mb-2 text-center">Conversor de Roteiros</h1>
+    <div className="w-full flex flex-col gap-5">
+      <PageHeader
+        icon={Clapperboard}
+        title="Conversor de Roteiros"
+        description="Escreva varios roteiros e converta tudo em legendas SRT ou arquivos TXT organizados."
+      />
 
       {/* === Slider === */}
       <div className="w-full">
@@ -125,10 +130,10 @@ export default function ConversorRoteiros() {
                 transition={{ duration: 0.3 }}
                 className="snap-center"
               >
-                <Card className="border shadow-sm hover:shadow-md relative">
+                <Card className="relative shadow-sm transition-shadow hover:shadow-md">
                   <button
                     onClick={() => handleRemove(i)}
-                    className="absolute top-2 right-2 p-1 rounded hover:bg-red-100 text-red-500"
+                    className="absolute top-3 right-3 z-10 grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                     title="Excluir roteiro"
                   >
                     <Trash className="w-4 h-4" />

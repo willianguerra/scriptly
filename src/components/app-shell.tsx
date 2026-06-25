@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import TecxpShell from "@/components/tecxp-shell";
+import ScriptlyShell from "@/components/scriptly-shell";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  return <TecxpShell>{children}</TecxpShell>;
+  return <ScriptlyShell>{children}</ScriptlyShell>;
 }

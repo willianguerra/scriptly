@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Languages, Download, Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { PageHeader } from "@/components/page-header";
 
 export default function TranslatorFile() {
   const [fileText, setFileText] = useState("");
@@ -79,16 +80,25 @@ export default function TranslatorFile() {
   }
 
   return (
-    <Card className="max-w-3xl mx-auto mt-10 p-4 shadow-lg">
-      <CardContent className="space-y-4">
-        <h2 className="text-2xl font-bold text-center">📜 Tradutor de Roteiros Inteligente</h2>
+    <div className="w-full flex flex-col gap-5">
+      <PageHeader
+        icon={Languages}
+        title="Tradutor de Roteiros"
+        description="Envie um arquivo .txt ou cole o texto e traduza para o idioma desejado."
+      />
 
-        <input
-          type="file"
-          accept=".txt"
-          onChange={handleFileUpload}
-          className="border p-2 w-full"
-        />
+      <Card>
+        <CardContent className="space-y-4 p-4">
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed bg-muted/40 px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted">
+          <Upload className="h-4 w-4 shrink-0" />
+          <span>Selecionar arquivo .txt</span>
+          <input
+            type="file"
+            accept=".txt"
+            onChange={handleFileUpload}
+            className="sr-only"
+          />
+        </label>
 
         <Textarea
           placeholder="Ou cole o texto aqui..."
@@ -113,8 +123,8 @@ export default function TranslatorFile() {
             </SelectContent>
           </Select>
 
-          <Button onClick={handleTranslate} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={handleTranslate} disabled={loading} className="gap-2">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
             Traduzir
           </Button>
         </div>
@@ -130,17 +140,19 @@ export default function TranslatorFile() {
 
         {translated && (
           <div className="space-y-2">
-            <Button onClick={handleDownload} variant="secondary">
-              📥 Baixar roteiro traduzido
+            <Button onClick={handleDownload} variant="secondary" className="gap-2">
+              <Download className="h-4 w-4" />
+              Baixar roteiro traduzido
             </Button>
             <Textarea
               readOnly
               value={translated}
-              className="min-h-[200px] bg-gray-100"
+              className="min-h-[200px] bg-muted/50"
             />
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

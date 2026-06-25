@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Link2, Copy, Check } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 function normalizeInputToYoutubeSubscribe(value: string): string {
   const raw = value.trim();
@@ -54,15 +55,11 @@ export default function LinkInscricao() {
 
   return (
     <section className="space-y-5">
-      <div className="space-y-1">
-        <h1 className="flex items-center gap-3 text-3xl font-semibold">
-          <span className="grid h-9 w-9 place-items-center rounded-lg border bg-muted text-muted-foreground">
-            <Link2 className="h-5 w-5" />
-          </span>
-          Gerador de Link de Inscricao
-        </h1>
-        <p className="text-muted-foreground">Gere links de inscricao automatica para seu canal do YouTube.</p>
-      </div>
+      <PageHeader
+        icon={Link2}
+        title="Gerador de Link de Inscricao"
+        description="Gere links de inscricao automatica para seu canal do YouTube."
+      />
 
       <Card>
         <CardHeader>

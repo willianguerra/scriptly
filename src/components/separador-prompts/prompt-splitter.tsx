@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, Split } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,13 @@ export function PromptSplitter() {
   }
 
   return (
-    <div className="grid h-full min-h-0 gap-4 lg:grid-rows-[auto_minmax(0,1fr)]">
+    <div className="grid h-full min-h-0 gap-4 lg:grid-rows-[auto_auto_minmax(0,1fr)]">
+      <PageHeader
+        icon={Split}
+        title="Separador de Prompts"
+        description="Importe o arquivo bruto e divida automaticamente os prompts em duas listas."
+      />
+
       <Card className="shrink-0">
         <CardHeader>
           <CardTitle>Importacao e Exportacao de Prompts</CardTitle>

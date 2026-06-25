@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/page-header";
+import { Film } from "lucide-react";
 
 function extractIndexFromFilename(filename: string): number | undefined {
   const base = filename.replace(/\.[^/.]+$/, ""); // remove extensão
@@ -48,12 +50,15 @@ export default function VideoDePara() {
   }, [files, expectedTotal]);
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>De/Para de Vídeos</CardTitle>
-      </CardHeader>
+    <div className="w-full flex flex-col gap-5">
+      <PageHeader
+        icon={Film}
+        title="De/Para de Vídeos"
+        description="Anexe os vídeos e descubra rapidamente quais números estão faltando ou duplicados."
+      />
 
-      <CardContent className="space-y-4">
+      <Card>
+      <CardContent className="space-y-4 p-4">
         <div className="grid gap-2">
           <Label htmlFor="expectedTotal">Quantidade informada</Label>
           <Input
@@ -78,9 +83,10 @@ export default function VideoDePara() {
 
         <div className="grid gap-2">
           <Label>Resultado</Label>
-          <Textarea value={summary} readOnly className="min-h-[120px]" />
+          <Textarea value={summary} readOnly className="min-h-[120px] font-mono text-sm" />
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Download, ImageUp } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -91,15 +92,11 @@ export default function UpscaleImage() {
 
   return (
     <section className="space-y-5">
-      <div className="space-y-1">
-        <h1 className="flex items-center gap-3 text-3xl font-semibold">
-          <span className="grid h-9 w-9 place-items-center rounded-lg border bg-muted text-muted-foreground">
-            <ImageUp className="h-5 w-5" />
-          </span>
-          Upscaler de Imagem com IA
-        </h1>
-        <p className="text-muted-foreground">Aumente a resolucao de suas imagens em ate 4x.</p>
-      </div>
+      <PageHeader
+        icon={ImageUp}
+        title="Upscaler de Imagem com IA"
+        description="Aumente a resolucao de suas imagens em ate 4x."
+      />
 
       <Card>
         <CardContent className="space-y-5 p-5">

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { FileText, Plus, Download, Eraser } from "lucide-react";
 
 // --- Constantes
 const CARACTERES_POR_BLOCO = 500;
@@ -186,10 +188,14 @@ export function ConversorSRT() {
   };
 
   return (
-    <div className="w-full p-6 flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">Conversor de Texto para SRT</h1>
+    <div className="w-full flex flex-col gap-5">
+      <PageHeader
+        icon={FileText}
+        title="Conversor de Texto para SRT"
+        description="Cole seus roteiros e gere legendas SRT com tempos calculados automaticamente."
+      />
 
-      <div className="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto">
+      <div className="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
         {roteiros.map((roteiro, i) => (
           <Card key={i} className="pt-0">
             <CardContent className="p-4 space-y-2">
@@ -209,30 +215,37 @@ export function ConversorSRT() {
         ))}
       </div>
 
-      <Button
-        variant="outline"
-        onClick={() => setRoteiros([...roteiros, ""])}
-      >
-        + Adicionar Roteiro
-      </Button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => setRoteiros([...roteiros, ""])}
+        >
+          <Plus className="h-4 w-4" />
+          Adicionar Roteiro
+        </Button>
 
-      <Button onClick={() => setResultado(converterTodosRoteiros())}>
-        Converter para SRT
-      </Button>
+        <Button className="gap-2 sm:flex-1" onClick={() => setResultado(converterTodosRoteiros())}>
+          <FileText className="h-4 w-4" />
+          Converter para SRT
+        </Button>
+      </div>
 
       {resultado && (
         <>
-          <div className="flex justify-between gap-2">
-            <Button variant="default" onClick={handleDownload}>
+          <div className="flex flex-col justify-between gap-2 sm:flex-row">
+            <Button variant="default" className="gap-2" onClick={handleDownload}>
+              <Download className="h-4 w-4" />
               Download SRT
             </Button>
-            <Button variant="destructive" onClick={handleLimpar}>
+            <Button variant="destructive" className="gap-2" onClick={handleLimpar}>
+              <Eraser className="h-4 w-4" />
               Limpar
             </Button>
           </div>
 
           <Card>
-            <CardContent className="p-4 whitespace-pre-wrap bg-muted">
+            <CardContent className="max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-4 font-mono text-sm">
               {resultado}
             </CardContent>
           </Card>

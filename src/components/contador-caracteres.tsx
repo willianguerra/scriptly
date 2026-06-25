@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Type, Eraser, Copy, Check } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 function countWords(text: string): number {
   const trimmed = text.trim();
@@ -43,15 +44,11 @@ export default function ContadorCaracteres() {
 
   return (
     <section className="space-y-5">
-      <div className="space-y-1">
-        <h1 className="flex items-center gap-3 text-3xl font-semibold">
-          <span className="grid h-9 w-9 place-items-center rounded-lg border bg-muted text-muted-foreground">
-            <Type className="h-5 w-5" />
-          </span>
-          Contador de Caracteres e Palavras
-        </h1>
-        <p className="text-muted-foreground">Ferramenta completa para analise de texto, SEO e redes sociais.</p>
-      </div>
+      <PageHeader
+        icon={Type}
+        title="Contador de Caracteres e Palavras"
+        description="Ferramenta completa para analise de texto, SEO e redes sociais."
+      />
 
       <div className="grid gap-3 md:grid-cols-5">
         <MetricCard title="Caracteres" value={String(totalChars)} />
