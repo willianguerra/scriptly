@@ -13,6 +13,7 @@ import {
   Tag,
   Wand2,
   Split,
+  AudioLines,
   Menu,
   ChevronRight,
 } from "lucide-react";
@@ -47,6 +48,7 @@ const mainTools: ToolItem[] = [
   { href: "/linkinscricao", label: "Link de Inscricao", icon: Link2 },
   { href: "/translate", label: "Extrator de Tags", icon: Tag },
   { href: "/separador-prompts", label: "Separador de Prompts", icon: Split },
+  { href: "/divisor-audio", label: "Divisor de Áudio", icon: AudioLines },
 ];
 
 const secondaryTools: ToolItem[] = [
