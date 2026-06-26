@@ -454,8 +454,44 @@ export function AudioSplitter() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="space-y-3">
+            <div className="max-h-[480px] space-y-2 overflow-y-auto rounded-md border border-input p-3">
+              {segments.map((segment) => {
+                const num = String(segment.index).padStart(3, "0");
+                const header = `PROMPT ${num} | ${formatTime(segment.start)} - ${formatTime(segment.end)}`;
+                const isError = segment.status === "error";
+                const isTranscribing = segment.status === "transcribing";
+                return (
+                  <div key={segment.index} className="space-y-1">
+                    <p
+                      className={`text-xs font-mono font-semibold ${
+                        isError ? "text-destructive" : "text-muted-foreground"
+                      }`}
+                    >
+                      {header}
+                      {isError && " — ERRO"}
+                    </p>
+                    <textarea
+                      readOnly
+                      rows={3}
+                      value={
+                        isError
+                          ? segment.error ?? "Falha ao transcrever este trecho."
+                          : isTranscribing
+                          ? "Transcrevendo..."
+                          : segment.transcript || "[sem transcrição]"
+                      }
+                      className={`w-full resize-y rounded-md border px-3 py-2 font-mono text-sm leading-relaxed focus:outline-none ${
+                        isError
+                          ? "border-destructive/60 bg-destructive/5 text-destructive"
+                          : "border-input bg-muted/40 text-foreground"
+                      }`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <p className="pt-1 text-xs text-muted-foreground">
               Blocos de {segmentSeconds} segundos. Use os botões acima para copiar ou
               baixar o resultado no padrão de sincronização.
             </p>
