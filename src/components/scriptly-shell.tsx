@@ -41,19 +41,18 @@ type ToolItem = {
 
 const mainTools: ToolItem[] = [
   { href: "/", label: "Inicio", icon: Home },
-  { href: "/converter_srt", label: "Conversor SRT", icon: FileText },
+  { href: "/divisor-audio", label: "Divisor de Áudio", icon: AudioLines },
+  { href: "/upscaleimage", label: "Thumbnail YouTube", icon: Wand2 },
+  { href: "/separador-prompts", label: "Separador de Prompts", icon: Split },
+  { href: "/linkinscricao", label: "Link de Inscricao", icon: Link2 },
   { href: "/contadorcaracteres", label: "Contador de Caracteres", icon: Type },
+  { href: "/converter_srt", label: "Conversor SRT", icon: FileText },
   { href: "/analysis_script", label: "Divisor de Texto", icon: Scissors },
   { href: "/check_videos", label: "Extrator de Frame", icon: ImageIcon },
-  { href: "/linkinscricao", label: "Link de Inscricao", icon: Link2 },
   { href: "/translate", label: "Extrator de Tags", icon: Tag },
-  { href: "/separador-prompts", label: "Separador de Prompts", icon: Split },
-  { href: "/divisor-audio", label: "Divisor de Áudio", icon: AudioLines },
 ];
 
-const secondaryTools: ToolItem[] = [
-  { href: "/upscaleimage", label: "Upscale de Imagem", icon: Wand2 },
-];
+const secondaryTools: ToolItem[] = [];
 
 function Brand() {
   return (
@@ -84,19 +83,23 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
 
-      <p className="mb-2 mt-6 px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        Outras ferramentas
-      </p>
-      <nav className="space-y-1">
-        {secondaryTools.map((item) => (
-          <SidebarLink
-            key={item.href}
-            {...item}
-            active={pathname === item.href}
-            onNavigate={onNavigate}
-          />
-        ))}
-      </nav>
+      {secondaryTools.length > 0 ? (
+        <>
+          <p className="mb-2 mt-6 px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Outras ferramentas
+          </p>
+          <nav className="space-y-1">
+            {secondaryTools.map((item) => (
+              <SidebarLink
+                key={item.href}
+                {...item}
+                active={pathname === item.href}
+                onNavigate={onNavigate}
+              />
+            ))}
+          </nav>
+        </>
+      ) : null}
     </>
   );
 }
