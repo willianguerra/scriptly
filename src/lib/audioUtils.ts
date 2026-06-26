@@ -3,8 +3,12 @@
 
 import type { AudioSegment, AudioSegmentExport } from "@/types/audio";
 
-/** Duração de cada bloco de áudio, em segundos. */
+/** Duração padrão de cada bloco de áudio, em segundos. */
 export const SEGMENT_SECONDS = 8;
+
+/** Limites permitidos para a duração de cada bloco, em segundos. */
+export const MIN_SEGMENT_SECONDS = 1;
+export const MAX_SEGMENT_SECONDS = 60;
 
 /** Tamanho máximo permitido para o arquivo de áudio (50 MB). */
 export const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
@@ -197,15 +201,50 @@ export function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
   return new Blob([arrayBuffer], { type: "audio/wav" });
 }
 
-/** Monta o texto final no formato "Parte N — MM:SS até MM:SS". */
-export function buildPlainTextExport(segments: AudioSegment[]): string {
-  return segments
+export interface PromptExportInfo {
+  /** Nome do arquivo de áudio de origem. */
+  fileName: string;
+  /** Duração total do áudio, em segundos. */
+  duration: number;
+  /** Duração de cada bloco, em segundos. */
+  segmentSeconds: number;
+}
+
+/**
+ * Monta o texto final no padrão de sincronização:
+ *
+ *   PROMPT 001 | 00:00 - 00:08
+ *   <transcrição>
+ *   ----------------------------------------
+ */
+export function buildPromptTextExport(
+  segments: AudioSegment[],
+  info: PromptExportInfo
+): string {
+  const linha = "=".repeat(60);
+  const separador = "-".repeat(60);
+  const { fileName, duration, segmentSeconds } = info;
+
+  const cabecalho = [
+    linha,
+    `SINCRONIZAÇÃO DOTTI SYNC - GROK ${segmentSeconds}s - BLOCOS DE ${segmentSeconds}s`,
+    linha,
+    `Arquivo: ${fileName}`,
+    `Duração: ${formatTime(duration)}`,
+    `Total de prompts: ${segments.length}`,
+    linha,
+  ].join("\n");
+
+  const corpo = segments
     .map((segment) => {
-      const titulo = `Parte ${segment.index} — ${formatTime(segment.start)} até ${formatTime(segment.end)}`;
+      const numero = String(segment.index).padStart(3, "0");
+      const titulo = `PROMPT ${numero} | ${formatTime(segment.start)} - ${formatTime(segment.end)}`;
       const texto = segment.transcript.trim() || "[sem transcrição]";
-      return `${titulo}\n${texto}`;
+      return `${titulo}\n${texto}\n${separador}`;
     })
     .join("\n\n");
+
+  return `${cabecalho}\n\n${corpo}\n`;
 }
 
 /** Monta a estrutura JSON exportável dos trechos. */

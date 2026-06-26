@@ -13,10 +13,10 @@ export interface AudioSegment {
   start: number;
   /** Tempo final do trecho em segundos. */
   end: number;
-  /** Object URL para reprodução no player. */
-  url: string;
-  /** Blob WAV do trecho, usado na transcrição e download. */
-  blob: Blob;
+  /** Object URL para reprodução no player (opcional). */
+  url?: string;
+  /** Blob WAV do trecho (opcional). */
+  blob?: Blob;
   /** Texto transcrito do trecho. */
   transcript: string;
   /** Estado atual da transcrição do trecho. */

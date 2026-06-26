@@ -6,6 +6,7 @@ import {
   AudioLines,
   Copy,
   Check,
+  CheckCircle2,
   Download,
   FileJson,
   Play,
@@ -22,15 +23,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { AudioUploader } from "@/components/divisor-audio/audio-uploader";
-import { AudioSegmentCard } from "@/components/divisor-audio/audio-segment-card";
 import {
+  MAX_SEGMENT_SECONDS,
+  MIN_SEGMENT_SECONDS,
   SEGMENT_SECONDS,
   audioBufferToMono16k,
-  audioBufferToWavBlob,
   buildJsonExport,
-  buildPlainTextExport,
+  buildPromptTextExport,
   decodeAudioFile,
   formatTime,
   sliceAudioBuffer,
@@ -57,6 +60,7 @@ export function AudioSplitter() {
   const [file, setFile] = React.useState<File | null>(null);
   const [segments, setSegments] = React.useState<AudioSegment[]>([]);
   const [duration, setDuration] = React.useState<number | null>(null);
+  const [segmentSeconds, setSegmentSeconds] = React.useState(SEGMENT_SECONDS);
   const [stage, setStage] = React.useState<Stage>("idle");
   const [progress, setProgress] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
@@ -65,19 +69,10 @@ export function AudioSplitter() {
   const [modelPct, setModelPct] = React.useState(0);
   const [modelReady, setModelReady] = React.useState(false);
 
-  // Mantém as URLs ativas para revogá-las ao limpar/desmontar.
-  const objectUrlsRef = React.useRef<string[]>([]);
   // Mantém os buffers decodificados de cada trecho para reamostrar na transcrição.
   const buffersRef = React.useRef<Map<number, AudioBuffer>>(new Map());
 
   const isProcessing = stage === "splitting" || stage === "transcribing";
-
-  const revokeUrls = React.useCallback(() => {
-    objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    objectUrlsRef.current = [];
-  }, []);
-
-  React.useEffect(() => revokeUrls, [revokeUrls]);
 
   function handleFileSelected(selected: File) {
     const validationError = validateAudioFile(selected);
@@ -89,7 +84,6 @@ export function AudioSplitter() {
     setNotice(null);
     setFile(selected);
     // limpa resultado anterior ao trocar de arquivo
-    revokeUrls();
     buffersRef.current.clear();
     setSegments([]);
     setDuration(null);
@@ -97,12 +91,19 @@ export function AudioSplitter() {
     setProgress(0);
   }
 
-  function handleTranscriptChange(index: number, transcript: string) {
-    setSegments((prev) =>
-      prev.map((segment) =>
-        segment.index === index ? { ...segment, transcript } : segment
-      )
-    );
+  function handleSecondsChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const raw = Number(event.target.value);
+    if (!Number.isFinite(raw)) return;
+    setSegmentSeconds(raw);
+  }
+
+  function normalizeSeconds(value: number): number {
+    if (!Number.isFinite(value) || value <= 0) return SEGMENT_SECONDS;
+    return Math.min(MAX_SEGMENT_SECONDS, Math.max(MIN_SEGMENT_SECONDS, Math.round(value)));
+  }
+
+  function handleSecondsBlur() {
+    setSegmentSeconds((prev) => normalizeSeconds(prev));
   }
 
   async function handleProcess() {
@@ -117,11 +118,13 @@ export function AudioSplitter() {
       return;
     }
 
+    const seconds = normalizeSeconds(segmentSeconds);
+    setSegmentSeconds(seconds);
+
     setError(null);
     setNotice(null);
     setStage("splitting");
     setProgress(0);
-    revokeUrls();
     buffersRef.current.clear();
     setSegments([]);
 
@@ -142,22 +145,17 @@ export function AudioSplitter() {
       const decoded = await decodeAudioFile(file, audioContext);
       setDuration(decoded.duration);
 
-      const rawSegments = sliceAudioBuffer(decoded, SEGMENT_SECONDS, audioContext);
+      const rawSegments = sliceAudioBuffer(decoded, seconds, audioContext);
       if (rawSegments.length === 0) {
         throw new Error("Não foi possível identificar nenhum trecho no áudio.");
       }
 
       const created: AudioSegment[] = rawSegments.map((raw) => {
-        const blob = audioBufferToWavBlob(raw.buffer);
-        const url = URL.createObjectURL(blob);
-        objectUrlsRef.current.push(url);
         buffersRef.current.set(raw.index, raw.buffer);
         return {
           index: raw.index,
           start: raw.start,
           end: raw.end,
-          blob,
-          url,
           transcript: "",
           status: "pending",
         };
@@ -233,7 +231,6 @@ export function AudioSplitter() {
   }
 
   function handleReset() {
-    revokeUrls();
     buffersRef.current.clear();
     setFile(null);
     setSegments([]);
@@ -245,8 +242,16 @@ export function AudioSplitter() {
     setCopied(false);
   }
 
+  function exportInfo() {
+    return {
+      fileName: file?.name ?? "audio",
+      duration: duration ?? 0,
+      segmentSeconds,
+    };
+  }
+
   async function handleCopyAll() {
-    const text = buildPlainTextExport(segments);
+    const text = buildPromptTextExport(segments, exportInfo());
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
@@ -258,22 +263,28 @@ export function AudioSplitter() {
   }
 
   function handleDownloadTxt() {
-    downloadFile("transcricao-audio.txt", buildPlainTextExport(segments), "text/plain");
+    downloadFile(
+      "sincronizacao-audio.txt",
+      buildPromptTextExport(segments, exportInfo()),
+      "text/plain"
+    );
   }
 
   function handleDownloadJson() {
     const json = JSON.stringify(buildJsonExport(segments), null, 2);
-    downloadFile("transcricao-audio.json", json, "application/json");
+    downloadFile("sincronizacao-audio.json", json, "application/json");
   }
 
   const hasResult = segments.length > 0;
+  const doneCount = segments.filter((segment) => segment.status === "done").length;
+  const errorCount = segments.filter((segment) => segment.status === "error").length;
 
   return (
     <div className="w-full space-y-6">
       <PageHeader
         icon={AudioLines}
         title="Divisor de Áudio"
-        description="Envie ou grave um áudio para dividi-lo automaticamente em blocos de 8 segundos com a transcrição de cada trecho."
+        description="Envie ou grave um áudio para dividi-lo automaticamente em blocos com a transcrição de cada trecho."
       />
 
       <Card>
@@ -281,9 +292,9 @@ export function AudioSplitter() {
           <CardTitle>Enviar áudio</CardTitle>
           <CardDescription>
             Faça upload de um arquivo (MP3, WAV, M4A ou OGG) ou grave pelo microfone.
-            O áudio é dividido em blocos de {SEGMENT_SECONDS} segundos e transcrito com
-            Whisper direto no navegador (gratuito, sem chave). O modelo é baixado uma
-            única vez na primeira utilização.
+            O áudio é dividido em blocos do tamanho escolhido (padrão {SEGMENT_SECONDS}{" "}
+            segundos) e transcrito com Whisper direto no navegador (gratuito, sem chave).
+            O modelo é baixado uma única vez na primeira utilização.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -300,6 +311,28 @@ export function AudioSplitter() {
               )}
             </div>
           )}
+
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="segment-seconds">Segundos por bloco</Label>
+              <Input
+                id="segment-seconds"
+                type="number"
+                inputMode="numeric"
+                min={MIN_SEGMENT_SECONDS}
+                max={MAX_SEGMENT_SECONDS}
+                value={segmentSeconds}
+                onChange={handleSecondsChange}
+                onBlur={handleSecondsBlur}
+                disabled={isProcessing}
+                className="w-28"
+              />
+            </div>
+            <p className="pb-2 text-xs text-muted-foreground">
+              Entre {MIN_SEGMENT_SECONDS} e {MAX_SEGMENT_SECONDS} segundos. Padrão:{" "}
+              {SEGMENT_SECONDS}.
+            </p>
+          </div>
 
           {error && (
             <p
@@ -356,7 +389,7 @@ export function AudioSplitter() {
                 <span>
                   {stage === "splitting"
                     ? "Dividindo o áudio..."
-                    : "Transcrevendo trechos..."}
+                    : `Transcrevendo trechos (${doneCount + errorCount}/${segments.length})...`}
                 </span>
                 <span>{progress}%</span>
               </div>
@@ -367,42 +400,67 @@ export function AudioSplitter() {
       </Card>
 
       {hasResult && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Trechos</h2>
-              <Badge variant="secondary">{segments.length} partes</Badge>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={handleCopyAll}>
-                {copied ? (
-                  <Check className="mr-1.5 h-4 w-4" />
-                ) : (
-                  <Copy className="mr-1.5 h-4 w-4" />
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="text-lg">Resultado</CardTitle>
+                <Badge variant="secondary">{segments.length} blocos</Badge>
+                {stage === "done" && (
+                  <Badge variant="outline" className="gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Concluído
+                  </Badge>
                 )}
-                {copied ? "Copiado" : "Copiar texto"}
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={handleDownloadTxt}>
-                <Download className="mr-1.5 h-4 w-4" />
-                Baixar TXT
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={handleDownloadJson}>
-                <FileJson className="mr-1.5 h-4 w-4" />
-                Baixar JSON
-              </Button>
+                {errorCount > 0 && (
+                  <Badge variant="destructive">{errorCount} com erro</Badge>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyAll}
+                  disabled={isProcessing}
+                >
+                  {copied ? (
+                    <Check className="mr-1.5 h-4 w-4" />
+                  ) : (
+                    <Copy className="mr-1.5 h-4 w-4" />
+                  )}
+                  {copied ? "Copiado" : "Copiar texto"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadTxt}
+                  disabled={isProcessing}
+                >
+                  <Download className="mr-1.5 h-4 w-4" />
+                  Baixar TXT
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadJson}
+                  disabled={isProcessing}
+                >
+                  <FileJson className="mr-1.5 h-4 w-4" />
+                  Baixar JSON
+                </Button>
+              </div>
             </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {segments.map((segment) => (
-              <AudioSegmentCard
-                key={segment.index}
-                segment={segment}
-                onTranscriptChange={handleTranscriptChange}
-              />
-            ))}
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Blocos de {segmentSeconds} segundos. Use os botões acima para copiar ou
+              baixar o resultado no padrão de sincronização.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
