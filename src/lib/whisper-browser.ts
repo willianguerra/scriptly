@@ -139,20 +139,55 @@ async function getTranscriber(
   return transcriberPromise;
 }
 
+/** Taxa de amostragem esperada pelo Whisper. */
+const SAMPLE_RATE = 16000;
+/** Duração mínima (em segundos) para tentar transcrever um trecho. */
+const MIN_SAMPLE_SECONDS = 0.2;
+/** Limiar de energia (RMS) abaixo do qual o trecho é considerado silêncio. */
+const SILENCE_RMS_THRESHOLD = 0.0025;
+
+/** Calcula o RMS (energia média) das amostras para detectar silêncio. */
+function computeRms(samples: Float32Array): number {
+  if (samples.length === 0) return 0;
+  let sum = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const value = samples[i];
+    sum += value * value;
+  }
+  return Math.sqrt(sum / samples.length);
+}
+
 /**
  * Transcreve amostras de áudio mono a 16 kHz (Float32Array).
  * Retorna o texto transcrito já com espaços normalizados.
+ *
+ * Trechos vazios, muito curtos ou silenciosos retornam string vazia sem chamar
+ * o modelo: o Whisper geraria zero tokens e o tokenizer lançaria
+ * "token_ids must be a non-empty array of integers".
  */
 export async function transcribeSamples(
   samples: Float32Array,
   options: TranscribeSamplesOptions = {}
 ): Promise<string> {
+  const durationSeconds = samples.length / SAMPLE_RATE;
+  if (durationSeconds < MIN_SAMPLE_SECONDS) return "";
+  if (computeRms(samples) < SILENCE_RMS_THRESHOLD) return "";
+
   const transcriber = await getTranscriber(options.onModelProgress);
-  const result = await transcriber(samples, {
+
+  // chunk_length_s só é necessário para áudios acima da janela nativa de 30s do
+  // Whisper. Em trechos curtos ele ativa o caminho de "long-form", que é o que
+  // dispara o erro de tokens vazios quando há pouca/nenhuma fala.
+  const runtimeOptions: Record<string, unknown> = {
     language: options.language ?? "portuguese",
     task: "transcribe",
-    chunk_length_s: 30,
-  });
+  };
+  if (durationSeconds > 30) {
+    runtimeOptions.chunk_length_s = 30;
+    runtimeOptions.stride_length_s = 5;
+  }
+
+  const result = await transcriber(samples, runtimeOptions);
 
   const text = Array.isArray(result)
     ? result.map((item) => item.text ?? "").join(" ")
