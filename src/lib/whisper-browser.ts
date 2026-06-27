@@ -10,7 +10,11 @@ const MODEL_ID = "onnx-community/whisper-base";
 export type ModelProgressCallback = (percent: number) => void;
 
 export interface TranscribeSamplesOptions {
-  /** Idioma do áudio (nome em inglês, ex.: "portuguese", "english"). */
+  /**
+   * Idioma do áudio (nome em inglês, ex.: "portuguese", "english").
+   * Quando omitido (ou "auto"), o Whisper detecta o idioma automaticamente e
+   * transcreve na mesma língua falada — sem traduzir.
+   */
   language?: string;
   /** Progresso de download do modelo (0-100), útil na primeira execução. */
   onModelProgress?: ModelProgressCallback;
@@ -175,13 +179,20 @@ export async function transcribeSamples(
 
   const transcriber = await getTranscriber(options.onModelProgress);
 
+  // task "transcribe" mantém o texto no idioma falado (nunca traduz; "translate"
+  // é que converteria para inglês). Quando nenhum idioma é informado (ou "auto"),
+  // deixamos a chave `language` de fora para o Whisper detectar sozinho — assim
+  // forçar o idioma errado não distorce a transcrição.
+  const language = options.language?.trim().toLowerCase();
+  const runtimeOptions: Record<string, unknown> = {
+    task: "transcribe",
+  };
+  if (language && language !== "auto") {
+    runtimeOptions.language = language;
+  }
   // chunk_length_s só é necessário para áudios acima da janela nativa de 30s do
   // Whisper. Em trechos curtos ele ativa o caminho de "long-form", que é o que
   // dispara o erro de tokens vazios quando há pouca/nenhuma fala.
-  const runtimeOptions: Record<string, unknown> = {
-    language: options.language ?? "portuguese",
-    task: "transcribe",
-  };
   if (durationSeconds > 30) {
     runtimeOptions.chunk_length_s = 30;
     runtimeOptions.stride_length_s = 5;

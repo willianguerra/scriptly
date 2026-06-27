@@ -26,6 +26,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AudioUploader } from "@/components/divisor-audio/audio-uploader";
 import {
   MAX_SEGMENT_SECONDS,
@@ -44,6 +51,22 @@ import type { AudioSegment } from "@/types/audio";
 
 type Stage = "idle" | "splitting" | "transcribing" | "done";
 
+// Idiomas que o usuário pode informar. O valor é o nome em inglês esperado pelo
+// Whisper; "auto" deixa o modelo detectar o idioma falado automaticamente.
+const LANGUAGE_OPTIONS: { value: string; label: string }[] = [
+  { value: "auto", label: "Detectar automaticamente" },
+  { value: "portuguese", label: "Português" },
+  { value: "english", label: "Inglês" },
+  { value: "spanish", label: "Espanhol" },
+  { value: "french", label: "Francês" },
+  { value: "german", label: "Alemão" },
+  { value: "italian", label: "Italiano" },
+  { value: "japanese", label: "Japonês" },
+  { value: "korean", label: "Coreano" },
+  { value: "chinese", label: "Chinês" },
+  { value: "russian", label: "Russo" },
+];
+
 function downloadFile(fileName: string, content: string, mime: string) {
   const blob = new Blob([content], { type: `${mime};charset=utf-8` });
   const url = URL.createObjectURL(blob);
@@ -61,6 +84,7 @@ export function AudioSplitter() {
   const [segments, setSegments] = React.useState<AudioSegment[]>([]);
   const [duration, setDuration] = React.useState<number | null>(null);
   const [segmentSeconds, setSegmentSeconds] = React.useState(SEGMENT_SECONDS);
+  const [language, setLanguage] = React.useState("auto");
   const [stage, setStage] = React.useState<Stage>("idle");
   const [progress, setProgress] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
@@ -181,7 +205,7 @@ export function AudioSplitter() {
 
           const samples = await audioBufferToMono16k(buffer);
           const text = await transcribeSamples(samples, {
-            language: "portuguese",
+            language,
             onModelProgress: (pct) => {
               setModelPct(pct);
               if (pct >= 100) setModelReady(true);
@@ -328,9 +352,28 @@ export function AudioSplitter() {
                 className="w-28"
               />
             </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="audio-language">Idioma do áudio</Label>
+              <Select
+                value={language}
+                onValueChange={setLanguage}
+                disabled={isProcessing}
+              >
+                <SelectTrigger id="audio-language" className="w-56">
+                  <SelectValue placeholder="Selecione o idioma" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <p className="pb-2 text-xs text-muted-foreground">
-              Entre {MIN_SEGMENT_SECONDS} e {MAX_SEGMENT_SECONDS} segundos. Padrão:{" "}
-              {SEGMENT_SECONDS}.
+              O texto é transcrito no mesmo idioma do áudio (sem tradução). Informe
+              o idioma ou deixe em &quot;Detectar automaticamente&quot;.
             </p>
           </div>
 
