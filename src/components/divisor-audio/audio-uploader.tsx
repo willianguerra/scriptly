@@ -116,7 +116,7 @@ export function AudioUploader({ onFileSelected, disabled }: AudioUploaderProps) 
           Arraste um arquivo de áudio ou clique para selecionar
         </p>
         <p className="text-xs text-muted-foreground">
-          Formatos suportados: MP3, WAV, M4A e OGG (máx. 50 MB)
+          Formatos suportados: MP3, WAV, M4A e OGG (máx. 100 MB)
         </p>
 
         <input

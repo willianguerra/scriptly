@@ -10,8 +10,8 @@ export const SEGMENT_SECONDS = 8;
 export const MIN_SEGMENT_SECONDS = 1;
 export const MAX_SEGMENT_SECONDS = 60;
 
-/** Tamanho máximo permitido para o arquivo de áudio (50 MB). */
-export const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
+/** Tamanho máximo permitido para o arquivo de áudio (100 MB). */
+export const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 
 /** Extensões aceitas no upload. */
 export const ACCEPTED_AUDIO_EXTENSIONS = ["mp3", "wav", "m4a", "ogg"] as const;
