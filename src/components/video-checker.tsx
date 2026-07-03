@@ -1,10 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Check, Copy, Film, Trash2, UploadCloud } from "lucide-react";
+import {
+  Check,
+  Copy,
+  CopyCheck,
+  Files,
+  Film,
+  Hash,
+  Trash2,
+  TriangleAlert,
+  UploadCloud,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +27,47 @@ function extractIndexFromFilename(filename: string): number | undefined {
   if (!match) return undefined;
   const n = Number(match[0]);
   return Number.isFinite(n) ? n : undefined;
+}
+
+type StatCardProps = {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+  tone?: "default" | "danger";
+};
+
+function StatCard({ icon: Icon, label, value, tone = "default" }: StatCardProps) {
+  const active = tone === "danger" && value > 0;
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm transition-colors",
+        active && "border-destructive/40 bg-destructive/5"
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            "grid h-9 w-9 shrink-0 place-items-center rounded-lg",
+            active
+              ? "bg-destructive/15 text-destructive"
+              : "bg-primary/10 text-primary"
+          )}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+        <p
+          className={cn(
+            "text-2xl font-semibold leading-none tabular-nums",
+            active && "text-destructive"
+          )}
+        >
+          {value}
+        </p>
+      </div>
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+    </div>
+  );
 }
 
 export default function VideoDePara() {
@@ -104,25 +154,42 @@ export default function VideoDePara() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-5">
+    <div className="flex w-full flex-col gap-6">
       <PageHeader
         icon={Film}
         title="De/Para de Vídeos"
         description="Anexe os vídeos e descubra rapidamente quais números estão faltando ou duplicados."
       />
 
+      {/* Banda de entrada: configuração + dropzone lado a lado */}
       <Card>
-        <CardContent className="space-y-4 p-4">
-          <div className="grid gap-2">
-            <Label htmlFor="expectedTotal">Quantidade informada</Label>
-            <Input
-              id="expectedTotal"
-              type="number"
-              min={0}
-              value={expectedTotal}
-              onChange={(e) => setExpectedTotal(Number(e.target.value || 0))}
-              className="max-w-xs"
-            />
+        <CardContent className="grid gap-6 p-5 md:grid-cols-[minmax(240px,300px)_1fr] md:items-stretch">
+          <div className="flex flex-col gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="expectedTotal">Quantidade informada</Label>
+              <Input
+                id="expectedTotal"
+                type="number"
+                min={0}
+                value={expectedTotal}
+                onChange={(e) => setExpectedTotal(Number(e.target.value || 0))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Total de vídeos que deveriam existir (de 1 até este número).
+              </p>
+            </div>
+
+            {files.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={clearAll}
+                className="mt-auto w-full gap-1.5 text-muted-foreground"
+              >
+                <Trash2 className="h-4 w-4" />
+                Limpar {files.length} arquivo{files.length > 1 ? "s" : ""}
+              </Button>
+            )}
           </div>
 
           <div className="grid gap-2">
@@ -144,12 +211,12 @@ export default function VideoDePara() {
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
               className={cn(
-                "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors hover:border-primary/60 hover:bg-accent/40",
+                "flex min-h-[180px] flex-1 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors hover:border-primary/60 hover:bg-accent/40",
                 isDragging ? "border-primary bg-accent/50" : "border-border"
               )}
             >
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/10 text-primary">
-                <UploadCloud className="h-5 w-5" />
+              <span className="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
+                <UploadCloud className="h-6 w-6" />
               </span>
               <p className="text-sm font-medium">
                 Arraste os vídeos aqui ou clique para selecionar
@@ -170,36 +237,34 @@ export default function VideoDePara() {
               />
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{files.length} arquivos</Badge>
-            <Badge variant="outline">{uniqueCount} números únicos</Badge>
-            <Badge variant={missing.length ? "destructive" : "outline"}>
-              {missing.length} faltantes
-            </Badge>
-            <Badge variant={duplicates.length ? "destructive" : "outline"}>
-              {duplicates.length} duplicados
-            </Badge>
-            {files.length > 0 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={clearAll}
-                className="ml-auto gap-1.5 text-muted-foreground"
-              >
-                <Trash2 className="h-4 w-4" />
-                Limpar
-              </Button>
-            )}
-          </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Estatísticas */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard icon={Files} label="Arquivos" value={files.length} />
+        <StatCard icon={Hash} label="Números únicos" value={uniqueCount} />
+        <StatCard
+          icon={TriangleAlert}
+          label="Faltantes"
+          value={missing.length}
+          tone="danger"
+        />
+        <StatCard
+          icon={CopyCheck}
+          label="Duplicados"
+          value={duplicates.length}
+          tone="danger"
+        />
+      </div>
+
+      {/* Resultados em largura total */}
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle className="text-base">Faltantes ({missing.length})</CardTitle>
+            <CardTitle className="text-base">
+              Faltantes ({missing.length})
+            </CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -219,14 +284,16 @@ export default function VideoDePara() {
             <Textarea
               value={missing.length ? missingText : "Nenhum"}
               readOnly
-              className="min-h-[140px] font-mono text-sm"
+              className="min-h-[280px] font-mono text-sm"
             />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle className="text-base">Duplicados ({duplicates.length})</CardTitle>
+            <CardTitle className="text-base">
+              Duplicados ({duplicates.length})
+            </CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -246,7 +313,7 @@ export default function VideoDePara() {
             <Textarea
               value={duplicates.length ? duplicatesText : "Nenhum"}
               readOnly
-              className="min-h-[140px] font-mono text-sm"
+              className="min-h-[280px] font-mono text-sm"
             />
           </CardContent>
         </Card>

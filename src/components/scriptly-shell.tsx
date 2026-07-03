@@ -162,7 +162,7 @@ export default function ScriptlyShell({ children }: ScriptlyShellProps) {
             </div>
           </header>
 
-          <main className="mx-auto w-full max-w-[1080px] px-4 py-6 md:px-8 md:py-10">
+          <main className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8 md:py-10">
             {activeTool && activeTool.href !== "/" && (
               <nav
                 aria-label="Breadcrumb"
