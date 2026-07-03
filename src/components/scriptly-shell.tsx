@@ -43,12 +43,12 @@ const mainTools: ToolItem[] = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/divisor-audio", label: "Divisor de Áudio", icon: AudioLines },
   { href: "/upscaleimage", label: "Thumbnail YouTube", icon: Wand2 },
+  { href: "/check_videos", label: "Contador de Videos", icon: ImageIcon },
   { href: "/separador-prompts", label: "Separador de Prompts", icon: Split },
   { href: "/linkinscricao", label: "Link de Inscricao", icon: Link2 },
   { href: "/contadorcaracteres", label: "Contador de Caracteres", icon: Type },
   { href: "/converter_srt", label: "Conversor SRT", icon: FileText },
   { href: "/analysis_script", label: "Divisor de Texto", icon: Scissors },
-  { href: "/check_videos", label: "Extrator de Frame", icon: ImageIcon },
   { href: "/translate", label: "Extrator de Tags", icon: Tag },
 ];
 
