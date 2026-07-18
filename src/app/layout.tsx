@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 
 import "./globals.css";
 import AppShell from "@/components/app-shell";
+import { LoginScreen } from "@/components/auth/login-screen";
+import { getServerSession } from "@/lib/auth/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +18,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
   title: {
     default: "Scriptly",
     template: "%s | Scriptly",
@@ -47,7 +50,7 @@ export const metadata: Metadata = {
     title: "Scriptly",
     description:
       "Crie, edite e converta roteiros em legendas SRT ou arquivos TXT de forma simples, rápida e organizada com o Scriptly.",
-    url: "https://github.com/willianguerra/converter",
+    url: "/",
     siteName: "Scriptly",
     images: [
       {
@@ -69,11 +72,11 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
     googleBot: {
-      index: true,
-      follow: true,
+      index: false,
+      follow: false,
       "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
@@ -87,19 +90,25 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <AppShell>{children}</AppShell>
+          {session ? (
+            <AppShell username={session.username}>{children}</AppShell>
+          ) : (
+            <LoginScreen />
+          )}
         </ThemeProvider>
       </body>
     </html>
