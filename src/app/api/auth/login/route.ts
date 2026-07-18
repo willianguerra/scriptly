@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { verifyPassword } from "@/lib/auth/password";
+import { verifyUserCredentials } from "@/lib/auth/users";
 import { LoginRateLimiter } from "@/lib/auth/rate-limit";
 import {
   createSessionToken,
@@ -28,9 +28,15 @@ function clientKey(request: Request): string {
     "unknown";
 }
 
+// Em produção há sempre um IP real (x-forwarded-for na Vercel). Em
+// desenvolvimento não há, então todas as tentativas cairiam na mesma chave
+// "unknown" e um punhado de erros travaria o login por 15 min. Por isso o
+// limitador só age em produção.
+const rateLimitAtivo = process.env.NODE_ENV === "production";
+
 export async function POST(request: Request) {
   const key = clientKey(request);
-  if (!loginLimiter.canAttempt(key)) {
+  if (rateLimitAtivo && !loginLimiter.canAttempt(key)) {
     return NextResponse.json(
       { error: "Muitas tentativas. Aguarde 15 minutos e tente novamente." },
       { status: 429, headers: { "Retry-After": "900" } }
@@ -48,40 +54,37 @@ export async function POST(request: Request) {
     if (rawBody.length > 4_096) throw new Error("body too large");
     input = JSON.parse(rawBody);
   } catch {
-    loginLimiter.recordFailure(key);
+    if (rateLimitAtivo) loginLimiter.recordFailure(key);
     return NextResponse.json({ error: "Credenciais inválidas." }, { status: 400 });
   }
 
   const parsed = credentialsSchema.safeParse(input);
-  const configuredUsername = process.env.AUTH_USERNAME;
-  const passwordHash = process.env.AUTH_PASSWORD_HASH;
   const sessionSecret = process.env.AUTH_SESSION_SECRET;
 
-  if (!configuredUsername || !passwordHash || !sessionSecret) {
+  if (!sessionSecret) {
     return NextResponse.json(
       { error: "Autenticação não configurada no servidor." },
       { status: 503 }
     );
   }
 
-  const passwordMatches = parsed.success
-    ? await verifyPassword(parsed.data.password, passwordHash)
-    : false;
-  const usernameMatches =
-    parsed.success && parsed.data.username === configuredUsername;
+  // Credenciais agora vêm do banco (tabela User), não mais do .env.
+  const usuario = parsed.success
+    ? await verifyUserCredentials(parsed.data.username, parsed.data.password)
+    : null;
 
-  if (!passwordMatches || !usernameMatches) {
-    loginLimiter.recordFailure(key);
+  if (!usuario) {
+    if (rateLimitAtivo) loginLimiter.recordFailure(key);
     return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
   }
 
   loginLimiter.reset(key);
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = await createSessionToken(
-    { username: configuredUsername, expiresAt },
+    { username: usuario.username, expiresAt },
     sessionSecret
   );
-  const response = NextResponse.json({ username: configuredUsername });
+  const response = NextResponse.json({ username: usuario.username });
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
