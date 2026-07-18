@@ -16,7 +16,7 @@ import {
   AudioLines,
   Menu,
   ChevronRight,
-  Settings,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import {
 
 type ScriptlyShellProps = {
   children: React.ReactNode;
+  username: string;
 };
 
 type ToolItem = {
@@ -119,12 +120,22 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export default function ScriptlyShell({ children }: ScriptlyShellProps) {
+export default function ScriptlyShell({ children, username }: ScriptlyShellProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const pathname = usePathname();
   const activeTool = [...mainTools, ...secondaryTools, settingsItem].find(
     (item) => item.href === pathname
   );
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.assign("/login");
+    }
+  }
 
   return (
     <div className="min-h-screen text-foreground">
@@ -143,9 +154,24 @@ export default function ScriptlyShell({ children }: ScriptlyShellProps) {
           </div>
 
           <div className="border-t border-sidebar-border p-3">
-            <div className="flex items-center justify-between gap-2 rounded-lg bg-sidebar-accent/50 px-3 py-2">
-              <span className="text-xs text-muted-foreground">Tema</span>
-              <ThemeToggleButton />
+            <div className="space-y-2 rounded-lg bg-sidebar-accent/50 p-2">
+              <div className="flex items-center justify-between gap-2 px-1">
+                <span className="truncate text-xs text-muted-foreground" title={username}>
+                  {username}
+                </span>
+                <ThemeToggleButton />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="h-4 w-4" />
+                {isLoggingOut ? "Saindo..." : "Sair"}
+              </Button>
             </div>
           </div>
         </aside>
@@ -156,6 +182,15 @@ export default function ScriptlyShell({ children }: ScriptlyShellProps) {
             <Brand />
             <div className="flex items-center gap-1">
               <ThemeToggleButton />
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Sair"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label="Abrir menu">
