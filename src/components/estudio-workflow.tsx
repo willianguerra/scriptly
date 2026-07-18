@@ -6,8 +6,10 @@ import {
   AlertCircle,
   AudioLines,
   Captions,
+  Check,
   CheckCircle2,
   CircleDashed,
+  Copy,
   Download,
   FileJson,
   FileText,
@@ -42,6 +44,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import type { ProviderRoteiro } from "@/lib/roteiro/types";
 import type { Timings, Segmento } from "@/lib/roteiro/sync";
+import { formatTime } from "@/lib/audioUtils";
 import type { DarkviVoice } from "@/types/darkvi";
 import type { PromptSalvo } from "@/types/prompt";
 
@@ -462,7 +465,10 @@ type SincronizacaoEtapaProps = {
   modelPct: number;
   segmentos: Segmento[];
   timings: Timings | null;
+  audioUrl: string | null;
+  textoExportacao: string;
   onSincronizar: () => void;
+  onBaixarTexto: () => void;
   onBaixarSrt: () => void;
   onBaixarTimings: () => void;
 };
@@ -475,10 +481,27 @@ export function SincronizacaoEtapa({
   modelPct,
   segmentos,
   timings,
+  audioUrl,
+  textoExportacao,
   onSincronizar,
+  onBaixarTexto,
   onBaixarSrt,
   onBaixarTimings,
 }: SincronizacaoEtapaProps) {
+  const [copiado, setCopiado] = React.useState(false);
+  const [erroCopia, setErroCopia] = React.useState<string | null>(null);
+
+  async function handleCopiarTexto() {
+    try {
+      await navigator.clipboard.writeText(textoExportacao);
+      setErroCopia(null);
+      setCopiado(true);
+      window.setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      setErroCopia("Não foi possível copiar o resultado.");
+    }
+  }
+
   return (
     <Card id="etapa-sincronizacao" className="scroll-mt-6 gap-0 overflow-hidden py-0 shadow-none">
       <EtapaCabecalho
@@ -493,6 +516,28 @@ export function SincronizacaoEtapa({
           <div className="flex items-start gap-3 rounded-lg border bg-muted/35 px-4 py-3 text-sm text-muted-foreground">
             <CircleDashed className="mt-0.5 size-4 shrink-0" />
             Gere a narração para liberar a sincronização e os arquivos finais.
+          </div>
+        )}
+
+        {temAudio && audioUrl && (
+          <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium">Fonte da sincronização</p>
+                <p className="text-xs text-muted-foreground">
+                  Este é o áudio gerado na etapa anterior e enviado ao Whisper.
+                </p>
+              </div>
+              <Badge variant="outline" className="gap-1">
+                <CheckCircle2 className="size-3.5" /> Áudio gerado
+              </Badge>
+            </div>
+            <audio
+              controls
+              src={audioUrl}
+              className="w-full"
+              aria-label="Áudio gerado usado na sincronização"
+            />
           </div>
         )}
 
@@ -537,43 +582,61 @@ export function SincronizacaoEtapa({
         )}
 
         {segmentos.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">{segmentos.length} segmentos</Badge>
-              {timings && <Badge variant="secondary">{timings.duracao.toFixed(1)}s de áudio</Badge>}
-              <Button variant="outline" size="sm" onClick={onBaixarSrt}>
-                <Captions className="size-4" /> Baixar SRT
-              </Button>
-              <Button variant="outline" size="sm" onClick={onBaixarTimings}>
-                <FileJson className="size-4" /> Baixar timings.json
-              </Button>
+          <div className="space-y-4 border-t pt-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-base font-semibold">Resultado</h3>
+                <Badge variant="secondary">{segmentos.length} blocos</Badge>
+                <Badge variant="outline" className="gap-1">
+                  <CheckCircle2 className="size-3.5" /> Concluído
+                </Badge>
+                {timings && (
+                  <Badge variant="outline">{formatTime(timings.duracao)} de áudio</Badge>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleCopiarTexto}>
+                  {copiado ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {copiado ? "Copiado" : "Copiar texto"}
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={onBaixarTexto}>
+                  <Download className="size-4" /> Baixar TXT
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={onBaixarSrt}>
+                  <Captions className="size-4" /> Baixar SRT
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={onBaixarTimings}>
+                  <FileJson className="size-4" /> Baixar JSON
+                </Button>
+              </div>
             </div>
 
-            <div className="max-h-80 overflow-auto rounded-lg border">
-              <table className="w-full min-w-[34rem] text-sm">
-                <caption className="sr-only">Trechos sincronizados da narração</caption>
-                <thead className="sticky top-0 bg-muted text-left text-xs text-muted-foreground">
-                  <tr>
-                    <th scope="col" className="px-3 py-2.5 font-medium">Início</th>
-                    <th scope="col" className="px-3 py-2.5 font-medium">Fim</th>
-                    <th scope="col" className="px-3 py-2.5 font-medium">Texto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {segmentos.map((segmento, index) => (
-                    <tr key={`${segmento.inicio}-${index}`} className="border-t hover:bg-muted/30">
-                      <td className="whitespace-nowrap px-3 py-2 tabular-nums text-muted-foreground">
-                        {segmento.inicio.toFixed(2)}s
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 tabular-nums text-muted-foreground">
-                        {segmento.fim.toFixed(2)}s
-                      </td>
-                      <td className="px-3 py-2 leading-relaxed">{segmento.texto}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {erroCopia && (
+              <p role="alert" className="text-sm text-destructive">{erroCopia}</p>
+            )}
+
+            <div className="max-h-[480px] space-y-2 overflow-y-auto rounded-md border border-input p-3">
+              {segmentos.map((segmento, index) => {
+                const numero = String(index + 1).padStart(3, "0");
+                return (
+                  <div key={`${segmento.inicio}-${index}`} className="space-y-1">
+                    <p className="font-mono text-xs font-semibold text-muted-foreground">
+                      PROMPT {numero} | {formatTime(segmento.inicio)} - {formatTime(segmento.fim)}
+                    </p>
+                    <textarea
+                      readOnly
+                      rows={3}
+                      value={segmento.texto || "[sem transcrição]"}
+                      className="w-full resize-y rounded-md border border-input bg-muted/40 px-3 py-2 font-mono text-sm leading-relaxed text-foreground focus:outline-none"
+                      aria-label={`Transcrição do prompt ${numero}`}
+                    />
+                  </div>
+                );
+              })}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Os blocos foram extraídos diretamente da narração gerada. Use os botões acima para copiar ou baixar no padrão de sincronização.
+            </p>
           </div>
         )}
       </CardContent>

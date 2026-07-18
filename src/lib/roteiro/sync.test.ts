@@ -5,6 +5,8 @@ import {
   agruparPalavras,
   formatarTempoSRT,
   montarTimings,
+  obterAudioGeradoParaSincronizacao,
+  segmentosParaTexto,
   segmentosParaSRT,
   type Segmento,
 } from "./sync.ts";
@@ -40,6 +42,20 @@ test("agruparPalavras respeita o limite de caracteres", () => {
   }
 });
 
+test("agruparPalavras não estende um trecho até a palavra do trecho seguinte", () => {
+  const segmentos = agruparPalavras(
+    [
+      { texto: "primeiro", inicio: 0, fim: 0.5 },
+      { texto: "segundo", inicio: 0.7, fim: 1.1 },
+    ],
+    10
+  );
+
+  assert.equal(segmentos.length, 2);
+  assert.equal(segmentos[0].fim, 0.5);
+  assert.equal(segmentos[1].inicio, 0.7);
+});
+
 test("agruparPalavras ignora palavras sem tempo válido", () => {
   const comLixo: Segmento[] = [
     { texto: "boa", inicio: 0, fim: 0.5 },
@@ -73,4 +89,32 @@ test("segmentosParaSRT numera e formata blocos", () => {
   ]);
   assert.ok(srt.startsWith("1\n00:00:00,000 --> 00:00:00,900\nOlá mundo."));
   assert.ok(srt.includes("2\n00:00:01,000 --> 00:00:02,200\nTudo bem?"));
+});
+
+test("segmentosParaTexto usa o mesmo padrão visual do Divisor de Áudio", () => {
+  const texto = segmentosParaTexto(
+    [
+      { texto: "Olá mundo.", inicio: 0, fim: 8 },
+      { texto: "Tudo bem?", inicio: 8, fim: 16.4 },
+    ],
+    16.4
+  );
+
+  assert.match(texto, /SINCRONIZAÇÃO DO ESTÚDIO - ÁUDIO GERADO/);
+  assert.match(texto, /PROMPT 001 \| 00:00 - 00:08\nOlá mundo\./);
+  assert.match(texto, /PROMPT 002 \| 00:08 - 00:16\nTudo bem\?/);
+});
+
+test("obterAudioGeradoParaSincronizacao preserva exatamente o áudio gerado", () => {
+  const audioGerado = new Blob(["audio-gerado"], { type: "audio/mpeg" });
+
+  assert.equal(obterAudioGeradoParaSincronizacao(audioGerado), audioGerado);
+  assert.throws(
+    () => obterAudioGeradoParaSincronizacao(null),
+    /Gere a narração antes de sincronizar/
+  );
+  assert.throws(
+    () => obterAudioGeradoParaSincronizacao(new Blob()),
+    /áudio gerado está vazio/
+  );
 });

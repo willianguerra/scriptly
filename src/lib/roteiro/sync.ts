@@ -3,6 +3,8 @@
 // aqui agrupamos essas palavras em segmentos legíveis e geramos timings.json
 // e SRT. Sem dependência de browser — pode ser testado em Node.
 
+import { formatTime } from "../audioUtils.ts";
+
 /** Um trecho alinhado do roteiro ao áudio (tempos em segundos). */
 export interface Segmento {
   texto: string;
@@ -44,13 +46,13 @@ export function agruparPalavras(
     }
 
     const combinado = `${atual.texto} ${texto}`;
-    atual.fim = palavra.fim;
 
     if (combinado.length > maxChars) {
       segmentos.push(atual);
       atual = { texto, inicio: palavra.inicio, fim: palavra.fim };
     } else {
       atual.texto = combinado;
+      atual.fim = palavra.fim;
       // Quebra ao terminar uma frase, para as legendas não colarem sentenças.
       if (/[.!?…]$/.test(texto)) {
         segmentos.push(atual);
@@ -102,4 +104,46 @@ export function segmentosParaSRT(segmentos: Segmento[]): string {
       })
       .join("\n\n") + "\n"
   );
+}
+
+/** Garante que a sincronização use o Blob obtido na geração da narração. */
+export function obterAudioGeradoParaSincronizacao(audioGerado: Blob | null): Blob {
+  if (!audioGerado) {
+    throw new Error("Gere a narração antes de sincronizar.");
+  }
+  if (audioGerado.size === 0) {
+    throw new Error("O áudio gerado está vazio. Gere a narração novamente.");
+  }
+  return audioGerado;
+}
+
+/** Monta a impressão textual no padrão visual usado pelo Divisor de Áudio. */
+export function segmentosParaTexto(
+  segmentos: Segmento[],
+  duracao: number
+): string {
+  const linha = "=".repeat(60);
+  const separador = "-".repeat(60);
+  const cabecalho = [
+    linha,
+    "SINCRONIZAÇÃO DO ESTÚDIO - ÁUDIO GERADO",
+    linha,
+    "Arquivo: narracao.mp3",
+    `Duração: ${formatTime(duracao)}`,
+    `Total de prompts: ${segmentos.length}`,
+    linha,
+  ].join("\n");
+
+  const corpo = segmentos
+    .map((segmento, index) => {
+      const numero = String(index + 1).padStart(3, "0");
+      const titulo = `PROMPT ${numero} | ${formatTime(
+        segmento.inicio
+      )} - ${formatTime(segmento.fim)}`;
+      const texto = segmento.texto.trim() || "[sem transcrição]";
+      return `${titulo}\n${texto}\n${separador}`;
+    })
+    .join("\n\n");
+
+  return `${cabecalho}\n\n${corpo}\n`;
 }

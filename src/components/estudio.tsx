@@ -26,6 +26,8 @@ import { listarPrompts } from "@/lib/prompt-api";
 import {
   agruparPalavras,
   montarTimings,
+  obterAudioGeradoParaSincronizacao,
+  segmentosParaTexto,
   segmentosParaSRT,
   type Segmento,
   type Timings,
@@ -87,7 +89,7 @@ export function Estudio() {
   const [voz, setVoz] = React.useState("");
   const [gerandoAudio, setGerandoAudio] = React.useState(false);
   const [audioUrl, setAudioUrl] = React.useState<string | null>(null);
-  const audioBlobRef = React.useRef<Blob | null>(null);
+  const [audioGerado, setAudioGerado] = React.useState<Blob | null>(null);
 
   const [sincronizando, setSincronizando] = React.useState(false);
   const [modelPct, setModelPct] = React.useState(0);
@@ -181,12 +183,16 @@ export function Estudio() {
     setGerandoAudio(true);
     setSegmentos([]);
     setTimings(null);
+    setAudioGerado(null);
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+      setAudioUrl(null);
+    }
     try {
       const id = await criarAudio({ text: roteiro.trim(), voice: voz });
       await aguardarConclusao(id);
       const blob = await baixarAudioBlob(id);
-      audioBlobRef.current = blob;
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      setAudioGerado(blob);
       setAudioUrl(URL.createObjectURL(blob));
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Falha ao gerar o áudio.");
@@ -196,9 +202,11 @@ export function Estudio() {
   }
 
   async function handleSincronizar() {
-    const blob = audioBlobRef.current;
-    if (!blob) {
-      setErro("Gere o áudio antes de sincronizar.");
+    let blob: Blob;
+    try {
+      blob = obterAudioGeradoParaSincronizacao(audioGerado);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Áudio gerado indisponível.");
       return;
     }
     setErro(null);
@@ -230,7 +238,7 @@ export function Estudio() {
   }
 
   const temRoteiro = roteiro.trim().length > 0;
-  const temAudio = Boolean(audioUrl);
+  const temAudio = Boolean(audioUrl && audioGerado);
   const temSincronizacao = segmentos.length > 0;
   const palavrasRoteiro = temRoteiro
     ? roteiro.trim().split(/\s+/).filter(Boolean).length
@@ -327,7 +335,7 @@ export function Estudio() {
             minutosEstimados={minutosEstimados}
             onVozChange={setVoz}
             onGerar={handleGerarAudio}
-            onBaixar={() => baixarBlob(audioBlobRef.current, "narracao.mp3")}
+            onBaixar={() => baixarBlob(audioGerado, "narracao.mp3")}
           />
           <SincronizacaoEtapa
             status={statusSincronizacao}
@@ -337,7 +345,19 @@ export function Estudio() {
             modelPct={modelPct}
             segmentos={segmentos}
             timings={timings}
+            audioUrl={audioUrl}
+            textoExportacao={segmentosParaTexto(
+              segmentos,
+              timings?.duracao ?? 0
+            )}
             onSincronizar={handleSincronizar}
+            onBaixarTexto={() =>
+              baixarTexto(
+                "sincronizacao-audio.txt",
+                segmentosParaTexto(segmentos, timings?.duracao ?? 0),
+                "text/plain"
+              )
+            }
             onBaixarSrt={() =>
               baixarTexto(
                 "legenda.srt",
