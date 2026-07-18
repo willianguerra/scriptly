@@ -3,6 +3,8 @@
 // é baixado uma vez (e fica em cache do navegador) e a inferência acontece no
 // cliente. O import é dinâmico para não inflar o bundle inicial nem rodar no SSR.
 
+import type { Segmento } from "@/lib/roteiro/sync";
+
 // Usamos o repositório "onnx-community", preparado para transformers.js v3, com
 // dtypes testados para WebGPU e WASM.
 const MODEL_ID = "onnx-community/whisper-base";
@@ -27,7 +29,10 @@ type ProgressData = {
   total?: number;
 };
 
-type AsrOutput = { text?: string } | Array<{ text?: string }>;
+type AsrChunk = { text?: string; timestamp?: [number, number | null] };
+type AsrOutput =
+  | { text?: string; chunks?: AsrChunk[] }
+  | Array<{ text?: string; chunks?: AsrChunk[] }>;
 type AsrPipeline = (
   input: Float32Array,
   options?: Record<string, unknown>
@@ -205,4 +210,63 @@ export async function transcribeSamples(
     : result.text ?? "";
 
   return text.trim();
+}
+
+/**
+ * Transcreve o áudio pedindo timestamps por palavra (`return_timestamps:
+ * "word"`) e devolve o texto completo mais os segmentos alinhados. É a base da
+ * etapa de sincronização (PLAN.md Fase 3): geramos a narração pelo TTS e depois
+ * "carimbamos" os tempos transcrevendo o próprio áudio.
+ *
+ * `duracaoSegundos` é usada apenas como limite para descartar timestamps
+ * incoerentes (o Whisper às vezes devolve `null` no fim da última palavra).
+ */
+export async function transcribeSamplesWithTimestamps(
+  samples: Float32Array,
+  options: TranscribeSamplesOptions & { duracaoSegundos?: number } = {}
+): Promise<{ texto: string; palavras: Segmento[] }> {
+  const durationSeconds =
+    options.duracaoSegundos ?? samples.length / SAMPLE_RATE;
+  if (samples.length / SAMPLE_RATE < MIN_SAMPLE_SECONDS) {
+    return { texto: "", palavras: [] };
+  }
+
+  const transcriber = await getTranscriber(options.onModelProgress);
+
+  const language = options.language?.trim().toLowerCase();
+  const runtimeOptions: Record<string, unknown> = {
+    task: "transcribe",
+    return_timestamps: "word",
+  };
+  if (language && language !== "auto") {
+    runtimeOptions.language = language;
+  }
+  if (durationSeconds > 30) {
+    runtimeOptions.chunk_length_s = 30;
+    runtimeOptions.stride_length_s = 5;
+  }
+
+  const result = await transcriber(samples, runtimeOptions);
+  const primeiro = Array.isArray(result) ? result[0] : result;
+
+  const texto = (primeiro?.text ?? "").trim();
+  const chunks = primeiro?.chunks ?? [];
+
+  const palavras: Segmento[] = [];
+  let ultimoFim = 0;
+  for (const chunk of chunks) {
+    const t = (chunk.text ?? "").trim();
+    if (!t) continue;
+    const inicio = chunk.timestamp?.[0];
+    // O fim pode vir null (última palavra): usa o início da próxima ou a duração.
+    const fimBruto = chunk.timestamp?.[1];
+    if (typeof inicio !== "number") continue;
+    const fim =
+      typeof fimBruto === "number" ? fimBruto : Math.min(durationSeconds, inicio + 0.4);
+    const inicioSeguro = Math.max(inicio, ultimoFim === 0 ? inicio : 0);
+    palavras.push({ texto: t, inicio: inicioSeguro, fim: Math.max(fim, inicioSeguro) });
+    ultimoFim = fim;
+  }
+
+  return { texto, palavras };
 }
