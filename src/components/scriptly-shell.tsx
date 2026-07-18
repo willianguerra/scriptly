@@ -5,12 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  FileText,
   Type,
-  Scissors,
   Image as ImageIcon,
   Link2,
-  Tag,
   Wand2,
   Split,
   AudioLines,
@@ -50,9 +47,6 @@ const mainTools: ToolItem[] = [
   { href: "/separador-prompts", label: "Separador de Prompts", icon: Split },
   { href: "/linkinscricao", label: "Link de Inscricao", icon: Link2 },
   { href: "/contadorcaracteres", label: "Contador de Caracteres", icon: Type },
-  { href: "/converter_srt", label: "Conversor SRT", icon: FileText },
-  { href: "/analysis_script", label: "Divisor de Texto", icon: Scissors },
-  { href: "/translate", label: "Extrator de Tags", icon: Tag },
 ];
 
 const secondaryTools: ToolItem[] = [];
