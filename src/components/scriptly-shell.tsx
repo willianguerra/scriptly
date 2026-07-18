@@ -56,6 +56,12 @@ const mainTools: ToolItem[] = [
 
 const secondaryTools: ToolItem[] = [];
 
+const settingsItem: ToolItem = {
+  href: "/configuracoes",
+  label: "Configurações",
+  icon: Settings,
+};
+
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
@@ -102,6 +108,14 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           </nav>
         </>
       ) : null}
+
+      <div className="mt-6 border-t border-sidebar-border pt-4">
+        <SidebarLink
+          {...settingsItem}
+          active={pathname === settingsItem.href}
+          onNavigate={onNavigate}
+        />
+      </div>
     </>
   );
 }
@@ -110,7 +124,7 @@ export default function ScriptlyShell({ children, username }: ScriptlyShellProps
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const pathname = usePathname();
-  const activeTool = [...mainTools, ...secondaryTools].find(
+  const activeTool = [...mainTools, ...secondaryTools, settingsItem].find(
     (item) => item.href === pathname
   );
 
