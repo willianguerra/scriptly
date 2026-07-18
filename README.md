@@ -1,37 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Scriptly
 
-## Getting Started
-    
-First, run the development server:
-  
+Aplicação Next.js com ferramentas para roteiros, áudio, legendas e imagens.
+
+## Desenvolvimento local
+
+Requisitos: Node.js 24+ e npm.
+
 ```bash
-npm run dev
-# or
-yarn dev 
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run auth:setup
 ```
 
+O segundo comando mostra um usuário, uma senha gerada e três variáveis de
+ambiente. Copie as variáveis para `.env` sem remover as chaves já existentes e
+guarde a senha em um gerenciador seguro. O arquivo `.env` é ignorado pelo Git.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Depois, inicie a aplicação:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Acesse [http://localhost:3000](http://localhost:3000). Todas as páginas e APIs
+exigem autenticação, com exceção do endpoint de login e dos arquivos estáticos.
 
-## Learn More
+## Variáveis de ambiente
 
-To learn more about Next.js, take a look at the following resources:
+| Variável | Finalidade |
+| --- | --- |
+| `AUTH_USERNAME` | Usuário autorizado a entrar |
+| `AUTH_PASSWORD_HASH` | Hash `scrypt` gerado por `npm run auth:setup` |
+| `AUTH_SESSION_SECRET` | Chave usada para assinar a sessão |
+| `DARKVI_API_TOKEN` | Token server-side da API de voz |
+| `APP_URL` | URL pública da aplicação, usada nos metadados sociais |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Configure os mesmos valores no ambiente de hospedagem. Nunca use a senha em
+texto puro como variável e nunca exponha tokens com o prefixo `NEXT_PUBLIC_`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Verificação
 
-## Deploy on Vercel
+```bash
+npm test
+npm run lint
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+As sessões duram oito horas, usam cookie `httpOnly`, `sameSite=strict` e
+`secure` em produção. O login é limitado a cinco falhas por endereço em uma
+janela de quinze minutos. Em hospedagem distribuída, substitua o limitador em
+memória por um armazenamento compartilhado antes de aumentar o tráfego.
