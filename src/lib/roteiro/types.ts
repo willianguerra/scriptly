@@ -27,7 +27,7 @@ export interface ResultadoRoteiro {
   texto: string;
   /** Provider que gerou o texto. */
   provider: ProviderRoteiro;
-  /** Modelo concreto usado (ex.: "gemini-2.5-flash", "gpt-4o-mini"). */
+  /** Modelo concreto usado (ex.: "gemini-3.5-flash", "gpt-4o-mini"). */
   modelo: string;
 }
 

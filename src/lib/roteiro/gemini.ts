@@ -14,7 +14,7 @@ const GEMINI_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
 
 /** Modelo padrão quando o canal não especifica. */
-export const GEMINI_MODELO_PADRAO = "gemini-2.5-flash";
+export const GEMINI_MODELO_PADRAO = "gemini-3.5-flash";
 
 type GeminiResposta = {
   candidates?: Array<{
