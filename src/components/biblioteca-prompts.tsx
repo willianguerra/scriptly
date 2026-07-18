@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Library, Plus, Pencil, Trash2, Save, X } from "lucide-react";
+import { Library, Plus, Pencil, Trash2, Save, X, Loader2 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -16,29 +16,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  carregarPrompts,
-  salvarPrompts,
-  adicionarPrompt,
+  listarPrompts,
+  criarPrompt,
   atualizarPrompt,
-  removerPrompt,
-  type PromptSalvo,
-} from "@/lib/prompt-store";
+  excluirPrompt,
+} from "@/lib/prompt-api";
+import type { PromptSalvo } from "@/types/prompt";
 
 export function BibliotecaPrompts() {
   const [lista, setLista] = React.useState<PromptSalvo[]>([]);
+  const [carregando, setCarregando] = React.useState(true);
+  const [salvando, setSalvando] = React.useState(false);
   const [editandoId, setEditandoId] = React.useState<string | null>(null);
   const [nome, setNome] = React.useState("");
   const [texto, setTexto] = React.useState("");
   const [erro, setErro] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setLista(carregarPrompts());
+    listarPrompts()
+      .then(setLista)
+      .catch((e) =>
+        setErro(e instanceof Error ? e.message : "Falha ao carregar prompts.")
+      )
+      .finally(() => setCarregando(false));
   }, []);
-
-  function persistir(nova: PromptSalvo[]) {
-    setLista(nova);
-    salvarPrompts(nova);
-  }
 
   function limparForm() {
     setEditandoId(null);
@@ -47,15 +48,24 @@ export function BibliotecaPrompts() {
     setErro(null);
   }
 
-  function handleSalvar() {
+  async function handleSalvar() {
+    setErro(null);
+    setSalvando(true);
     try {
-      const nova = editandoId
-        ? atualizarPrompt(lista, editandoId, { nome, texto })
-        : adicionarPrompt(lista, { nome, texto });
-      persistir(nova);
+      if (editandoId) {
+        const atualizado = await atualizarPrompt(editandoId, { nome, texto });
+        setLista((atual) =>
+          atual.map((p) => (p.id === editandoId ? atualizado : p))
+        );
+      } else {
+        const criado = await criarPrompt({ nome, texto });
+        setLista((atual) => [criado, ...atual]);
+      }
       limparForm();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSalvando(false);
     }
   }
 
@@ -66,9 +76,14 @@ export function BibliotecaPrompts() {
     setErro(null);
   }
 
-  function handleExcluir(id: string) {
-    persistir(removerPrompt(lista, id));
-    if (editandoId === id) limparForm();
+  async function handleExcluir(id: string) {
+    try {
+      await excluirPrompt(id);
+      setLista((atual) => atual.filter((p) => p.id !== id));
+      if (editandoId === id) limparForm();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
   }
 
   return (
@@ -116,8 +131,18 @@ export function BibliotecaPrompts() {
           )}
 
           <div className="flex items-center gap-2">
-            <Button className="gap-2" onClick={handleSalvar} disabled={!nome.trim()}>
-              {editandoId ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            <Button
+              className="gap-2"
+              onClick={handleSalvar}
+              disabled={!nome.trim() || salvando}
+            >
+              {salvando ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : editandoId ? (
+                <Save className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
               {editandoId ? "Salvar alterações" : "Adicionar prompt"}
             </Button>
             {editandoId && (
@@ -134,7 +159,11 @@ export function BibliotecaPrompts() {
           Prompts salvos ({lista.length})
         </h2>
 
-        {lista.length === 0 ? (
+        {carregando ? (
+          <p className="flex items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
+          </p>
+        ) : lista.length === 0 ? (
           <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
             Nenhum prompt salvo ainda. Crie o primeiro acima.
           </p>

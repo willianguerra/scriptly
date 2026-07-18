@@ -40,7 +40,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { gerarRoteiro } from "@/lib/roteiro-client";
 import type { ProviderRoteiro } from "@/lib/roteiro/types";
-import { carregarPrompts, type PromptSalvo } from "@/lib/prompt-store";
+import { listarPrompts } from "@/lib/prompt-api";
+import type { PromptSalvo } from "@/types/prompt";
 import {
   listarVozes,
   criarAudio,
@@ -120,7 +121,17 @@ export function Estudio() {
 
   // Carrega os prompts salvos (biblioteca) ao montar.
   React.useEffect(() => {
-    setPrompts(carregarPrompts());
+    let ativo = true;
+    listarPrompts()
+      .then((lista) => {
+        if (ativo) setPrompts(lista);
+      })
+      .catch(() => {
+        // silencioso: a biblioteca é opcional no fluxo do Estúdio
+      });
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   // Ao escolher um prompt salvo, preenche o texto (que continua editável).
