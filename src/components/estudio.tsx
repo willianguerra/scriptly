@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Clapperboard,
   Sparkles,
@@ -12,6 +13,7 @@ import {
   FileJson,
   Captions,
   Wand2,
+  Library,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -38,6 +40,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { gerarRoteiro } from "@/lib/roteiro-client";
 import type { ProviderRoteiro } from "@/lib/roteiro/types";
+import { carregarPrompts, type PromptSalvo } from "@/lib/prompt-store";
 import {
   listarVozes,
   criarAudio,
@@ -94,6 +97,8 @@ export function Estudio() {
   const [tema, setTema] = React.useState("");
   const [provider, setProvider] = React.useState<ProviderRoteiro>("fake");
   const [promptSistema, setPromptSistema] = React.useState("");
+  const [prompts, setPrompts] = React.useState<PromptSalvo[]>([]);
+  const [promptId, setPromptId] = React.useState<string>("__padrao__");
   const [roteiro, setRoteiro] = React.useState("");
   const [gerandoRoteiro, setGerandoRoteiro] = React.useState(false);
 
@@ -112,6 +117,22 @@ export function Estudio() {
   const [timings, setTimings] = React.useState<Timings | null>(null);
 
   const [erro, setErro] = React.useState<string | null>(null);
+
+  // Carrega os prompts salvos (biblioteca) ao montar.
+  React.useEffect(() => {
+    setPrompts(carregarPrompts());
+  }, []);
+
+  // Ao escolher um prompt salvo, preenche o texto (que continua editável).
+  function handleSelecionarPrompt(id: string) {
+    setPromptId(id);
+    if (id === "__padrao__") {
+      setPromptSistema("");
+      return;
+    }
+    const escolhido = prompts.find((p) => p.id === id);
+    if (escolhido) setPromptSistema(escolhido.texto);
+  }
 
   // Carrega as vozes da DarkVI ao montar (usa a chave salva ou a do servidor).
   React.useEffect(() => {
@@ -289,15 +310,38 @@ export function Estudio() {
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="promptSistema">
-              Instruções do canal <span className="text-muted-foreground">(opcional)</span>
-            </Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="prompt-salvo">Prompt do roteiro</Label>
+              <Link
+                href="/prompts"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Library className="h-3.5 w-3.5" /> Gerenciar prompts
+              </Link>
+            </div>
+            <Select value={promptId} onValueChange={handleSelecionarPrompt}>
+              <SelectTrigger id="prompt-salvo">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__padrao__">Padrão (embutido)</SelectItem>
+                {prompts.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Textarea
               id="promptSistema"
               value={promptSistema}
-              onChange={(e) => setPromptSistema(e.target.value)}
-              placeholder="Tom, duração-alvo, público, estilo de narração..."
-              className="min-h-20"
+              onChange={(e) => {
+                setPromptSistema(e.target.value);
+                // edição manual desvincula do prompt salvo selecionado
+                if (promptId !== "__padrao__") setPromptId("__padrao__");
+              }}
+              placeholder="Deixe em branco para usar o prompt padrão, ou escolha um da biblioteca acima e ajuste aqui."
+              className="min-h-24"
             />
           </div>
 
