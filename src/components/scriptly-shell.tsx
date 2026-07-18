@@ -11,6 +11,7 @@ import {
   Wand2,
   Split,
   AudioLines,
+  Clapperboard,
   Menu,
   ChevronRight,
   Settings,
@@ -41,6 +42,7 @@ type ToolItem = {
 
 const mainTools: ToolItem[] = [
   { href: "/", label: "Inicio", icon: Home },
+  { href: "/estudio", label: "Estúdio", icon: Clapperboard },
   { href: "/divisor-audio", label: "Divisor de Áudio", icon: AudioLines },
   { href: "/upscaleimage", label: "Thumbnail YouTube", icon: Wand2 },
   { href: "/check_videos", label: "Contador de Videos", icon: ImageIcon },
