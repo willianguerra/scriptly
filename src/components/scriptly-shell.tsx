@@ -16,6 +16,7 @@ import {
   AudioLines,
   Menu,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,12 @@ const mainTools: ToolItem[] = [
 ];
 
 const secondaryTools: ToolItem[] = [];
+
+const settingsItem: ToolItem = {
+  href: "/configuracoes",
+  label: "Configurações",
+  icon: Settings,
+};
 
 function Brand() {
   return (
@@ -100,6 +107,14 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           </nav>
         </>
       ) : null}
+
+      <div className="mt-6 border-t border-sidebar-border pt-4">
+        <SidebarLink
+          {...settingsItem}
+          active={pathname === settingsItem.href}
+          onNavigate={onNavigate}
+        />
+      </div>
     </>
   );
 }
@@ -107,7 +122,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 export default function ScriptlyShell({ children }: ScriptlyShellProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const pathname = usePathname();
-  const activeTool = [...mainTools, ...secondaryTools].find(
+  const activeTool = [...mainTools, ...secondaryTools, settingsItem].find(
     (item) => item.href === pathname
   );
 
