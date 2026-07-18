@@ -18,6 +18,10 @@ import {
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { getToken, setToken, listarVozes } from "@/lib/darkvi";
+import {
+  getChave as getChaveLlm,
+  setChave as setChaveLlm,
+} from "@/lib/roteiro-client";
 
 type TesteEstado =
   | { status: "idle" }
@@ -197,6 +201,109 @@ export default function Configuracoes() {
           )}
         </CardContent>
       </Card>
+
+      <ChavesLlmCard />
     </div>
+  );
+}
+
+// Card de chaves dos LLMs de roteiro (Gemini / OpenAI). As chaves ficam apenas
+// neste navegador (localStorage) e são enviadas por header para /api/roteiro;
+// sem chave salva, o servidor usa a variável de ambiente correspondente.
+function ChavesLlmCard() {
+  const [gemini, setGemini] = useState("");
+  const [openai, setOpenai] = useState("");
+  const [salvo, setSalvo] = useState<null | "gemini" | "openai">(null);
+
+  useEffect(() => {
+    setGemini(getChaveLlm("gemini"));
+    setOpenai(getChaveLlm("openai"));
+  }, []);
+
+  const salvarGemini = () => {
+    setChaveLlm("gemini", gemini);
+    setSalvo("gemini");
+    setTimeout(() => setSalvo(null), 2000);
+  };
+  const salvarOpenai = () => {
+    setChaveLlm("openai", openai);
+    setSalvo("openai");
+    setTimeout(() => setSalvo(null), 2000);
+  };
+
+  return (
+    <Card className="gap-0 overflow-hidden py-0">
+      <div className="flex items-center gap-3 border-b bg-gradient-to-br from-primary/8 via-primary/4 to-transparent px-5 py-4">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-primary/20">
+          <KeyRound className="h-5 w-5" />
+        </span>
+        <div className="leading-tight">
+          <h2 className="text-base font-semibold">Chaves de IA (roteiro)</h2>
+          <p className="text-xs text-muted-foreground">
+            Usadas no Estúdio para gerar roteiros com Gemini ou GPT.
+          </p>
+        </div>
+      </div>
+
+      <CardContent className="space-y-5 p-5">
+        <div className="grid gap-1.5">
+          <Label htmlFor="chave-gemini">Google Gemini · GEMINI_API_KEY</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="chave-gemini"
+                type="password"
+                value={gemini}
+                onChange={(e) => setGemini(e.target.value)}
+                placeholder="Cole sua chave do Gemini..."
+                autoComplete="off"
+                className="pl-9"
+              />
+            </div>
+            <Button className="gap-2" onClick={salvarGemini}>
+              {salvo === "gemini" ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {salvo === "gemini" ? "Salvo!" : "Salvar"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="chave-openai">OpenAI (GPT) · OPENAI_API_KEY</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="chave-openai"
+                type="password"
+                value={openai}
+                onChange={(e) => setOpenai(e.target.value)}
+                placeholder="Cole sua chave da OpenAI..."
+                autoComplete="off"
+                className="pl-9"
+              />
+            </div>
+            <Button className="gap-2" onClick={salvarOpenai}>
+              {salvo === "openai" ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {salvo === "openai" ? "Salvo!" : "Salvar"}
+            </Button>
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          As chaves ficam salvas apenas neste navegador e têm prioridade sobre as
+          variáveis de ambiente do servidor. Deixe em branco para usar a chave do
+          servidor.
+        </p>
+      </CardContent>
+    </Card>
   );
 }
