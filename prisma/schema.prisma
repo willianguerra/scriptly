@@ -1,0 +1,51 @@
+// Schema Prisma — Neon Postgres.
+// DATABASE_URL usa a conexão pooled (pgbouncer) para o runtime;
+// DIRECT_URL usa a conexão direta para migrações (prisma migrate/db push).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  username     String          @unique
+  passwordHash String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  prompts      Prompt[]
+  credentials  ApiCredential[]
+}
+
+/// Biblioteca de prompts de roteiro, por usuário.
+model Prompt {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nome      String
+  texto     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/// Chave de API de um provider (darkvi/gemini/openai), guardada criptografada.
+model ApiCredential {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   String
+  ciphertext String
+  iv         String
+  tag        String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, provider])
+}
