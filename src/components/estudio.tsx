@@ -14,6 +14,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { VideoPromptsChat } from "@/components/video-prompts-chat";
 
 import {
   MAX_SEGMENT_SECONDS,
@@ -105,7 +106,12 @@ export function Estudio() {
   const [totalBlocos, setTotalBlocos] = React.useState(0);
   const [segmentos, setSegmentos] = React.useState<Segmento[]>([]);
   const [timings, setTimings] = React.useState<Timings | null>(null);
+  const [promptsVideoConcluidos, setPromptsVideoConcluidos] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
+
+  const handlePromptsVideoConcluidos = React.useCallback((concluido: boolean) => {
+    setPromptsVideoConcluidos(concluido);
+  }, []);
 
   React.useEffect(() => {
     let ativo = true;
@@ -203,6 +209,7 @@ export function Estudio() {
     setGerandoAudio(true);
     setSegmentos([]);
     setTimings(null);
+    setPromptsVideoConcluidos(false);
     setAudioGerado(null);
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
@@ -308,21 +315,38 @@ export function Estudio() {
     : temAudio
       ? "atual"
       : "pendente";
-  const progresso = temSincronizacao ? 100 : temAudio ? 66 : temRoteiro ? 33 : 0;
+  const statusPromptsVideo: EtapaStatus = promptsVideoConcluidos
+    ? "concluida"
+    : temSincronizacao
+      ? "atual"
+      : "pendente";
+  const progresso = promptsVideoConcluidos
+    ? 100
+    : temSincronizacao
+      ? 75
+      : temAudio
+        ? 50
+        : temRoteiro
+          ? 25
+          : 0;
   const proximaAcao = !temRoteiro
     ? "Descreva o vídeo e gere o primeiro roteiro."
     : !temAudio
       ? "Escolha uma voz e gere a narração."
       : !temSincronizacao
         ? "Sincronize a narração para criar os arquivos finais."
-        : "Projeto pronto para baixar e usar na edição.";
+        : !promptsVideoConcluidos
+          ? "Abra o agente e gere os prompts de vídeo sincronizados."
+          : "Prompts prontos para gerar e revisar os vídeos.";
   const proximaAcaoHref = !temRoteiro
     ? "#etapa-roteiro"
     : !temAudio
       ? "#etapa-narracao"
       : !temSincronizacao
         ? "#etapa-sincronizacao"
-        : null;
+        : !promptsVideoConcluidos
+          ? "#etapa-prompts-video"
+          : null;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -330,7 +354,7 @@ export function Estudio() {
         <PageHeader
           icon={Clapperboard}
           title="Estúdio"
-          description="Do tema aos arquivos de edição, em um fluxo guiado de três etapas."
+          description="Do tema aos prompts de vídeo, em um fluxo guiado de quatro etapas."
         />
         <Badge variant="outline" className="w-fit gap-1.5 px-2.5 py-1">
           <Clock3 className="size-3.5" />
@@ -343,6 +367,7 @@ export function Estudio() {
           roteiro={statusRoteiro}
           audio={statusAudio}
           sincronizacao={statusSincronizacao}
+          promptsVideo={statusPromptsVideo}
         />
       </div>
 
@@ -440,6 +465,14 @@ export function Estudio() {
               )
             }
           />
+          <VideoPromptsChat
+            status={statusPromptsVideo}
+            provider={provider}
+            roteiro={roteiro}
+            sincronizacao={segmentosParaTexto(segmentos, timings?.duracao ?? 0)}
+            liberado={temSincronizacao}
+            onConcluidoChange={handlePromptsVideoConcluidos}
+          />
         </div>
 
         <ResumoProjeto
@@ -447,6 +480,7 @@ export function Estudio() {
           statusRoteiro={statusRoteiro}
           statusAudio={statusAudio}
           statusSincronizacao={statusSincronizacao}
+          statusPromptsVideo={statusPromptsVideo}
           proximaAcao={proximaAcao}
           proximaAcaoHref={proximaAcaoHref}
           temRoteiro={temRoteiro}

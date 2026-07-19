@@ -103,7 +103,7 @@ Full body portrait, standing neutral pose, arms relaxed at sides, facing camera.
         const timestamp = bloco[2].trim();
         const continuidade = index > 0 ? " Continuing from previous position." : "";
         return `PROMPT ${numero} [1] | ${timestamp}:
-Live-action cinematic film, photorealistic, real human actors, drama movie. Visual-only scene. Slow tracking camera, eye-level medium-wide composition.${continuidade} Character 1 moving through the location with a deliberate measured pace (level 4), focused eyes and restrained determination, translating this narration beat into one clear visual action: ${bloco[3].trim()} Environment: detailed cinematic setting shaped by the story, cool directional light with subtle warm highlights, layered depth and atmospheric particles, consistent objects and lighting direction across the sequence. Clean frame. 8K, photorealistic, dramatic low-key lighting.`;
+Live-action cinematic film, photorealistic, real human actors, drama movie. Visual-only scene. Slow tracking camera, eye-level medium-wide composition.${continuidade} Character 1 moving through the location with a deliberate measured pace (level 4), focused eyes and restrained determination, studying the surrounding details before reacting to a newly discovered visual clue with a subtle change in posture. Environment: detailed cinematic setting shaped by the story, cool directional light with warm highlights, layered depth and atmospheric particles, consistent objects and lighting direction across the sequence. Clean frame. 8K, photorealistic, dramatic low-key lighting.`;
       });
       return `===============================================================================
 PROMPTS DE CENA V2.0 — SINCRONIZADOS

@@ -120,10 +120,12 @@ export function EtapasNavegacao({
   roteiro,
   audio,
   sincronizacao,
+  promptsVideo,
 }: {
   roteiro: EtapaStatus;
   audio: EtapaStatus;
   sincronizacao: EtapaStatus;
+  promptsVideo: EtapaStatus;
 }) {
   const etapas = [
     { numero: 1, titulo: "Roteiro", href: "#etapa-roteiro", status: roteiro },
@@ -134,11 +136,17 @@ export function EtapasNavegacao({
       href: "#etapa-sincronizacao",
       status: sincronizacao,
     },
+    {
+      numero: 4,
+      titulo: "Prompts de vídeo",
+      href: "#etapa-prompts-video",
+      status: promptsVideo,
+    },
   ];
 
   return (
     <nav aria-label="Etapas do Estúdio">
-      <ol className="grid gap-2 sm:grid-cols-3">
+      <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {etapas.map((etapa) => (
           <li key={etapa.numero}>
             <a
@@ -696,6 +704,7 @@ export function ResumoProjeto({
   statusRoteiro,
   statusAudio,
   statusSincronizacao,
+  statusPromptsVideo,
   proximaAcao,
   proximaAcaoHref,
   temRoteiro,
@@ -706,6 +715,7 @@ export function ResumoProjeto({
   statusRoteiro: EtapaStatus;
   statusAudio: EtapaStatus;
   statusSincronizacao: EtapaStatus;
+  statusPromptsVideo: EtapaStatus;
   proximaAcao: string;
   proximaAcaoHref: string | null;
   temRoteiro: boolean;
@@ -720,6 +730,12 @@ export function ResumoProjeto({
       titulo: "Sincronização",
       href: "#etapa-sincronizacao",
       status: statusSincronizacao,
+    },
+    {
+      numero: 4,
+      titulo: "Prompts de vídeo",
+      href: "#etapa-prompts-video",
+      status: statusPromptsVideo,
     },
   ];
 

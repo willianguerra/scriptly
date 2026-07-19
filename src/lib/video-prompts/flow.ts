@@ -47,19 +47,27 @@ export function montarInstrucaoDaEtapa(
   etapa: EtapaChatPrompts,
   mensagemUsuario?: string
 ): string {
+  const ajuste = mensagemUsuario?.trim();
+
   switch (etapa) {
     case "analise":
       return [
-        "Execute somente a ETAPA 1 do DOTTI AGENT 2.0.",
+        ajuste
+          ? "Revise somente a ETAPA 1 do DOTTI AGENT 2.0 conforme o pedido do usuário."
+          : "Execute somente a ETAPA 1 do DOTTI AGENT 2.0.",
         "Analise o roteiro fixo e responda no formato 'ROTEIRO RECEBIDO E ANALISADO'.",
         "Defina gênero, cenário, paleta, os 3 personagens principais em ordem de importância e todos os secundários.",
         "Não gere ainda prompts de referência nem prompts de cena.",
+        ajuste ? `PEDIDO DE AJUSTE: ${ajuste}` : "",
       ].join(" ");
     case "referencias":
       return [
-        "A análise foi confirmada. Execute somente a ETAPA 2.",
+        ajuste
+          ? "Revise somente a ETAPA 2 conforme o pedido do usuário."
+          : "A análise foi confirmada. Execute somente a ETAPA 2.",
         "Gere 'PROMPTS DE REFERÊNCIA — IMAGENS DOS PERSONAGENS' para Character 1, 2 e 3 usando exatamente as decisões confirmadas no histórico.",
         "Não gere ainda os prompts sincronizados de cena.",
+        ajuste ? `PEDIDO DE AJUSTE: ${ajuste}` : "",
       ].join(" ");
     case "cenas":
       return [
@@ -68,7 +76,7 @@ export function montarInstrucaoDaEtapa(
         "Preserve timestamps e numeração, aplique continuidade entre blocos e termine com o total conferido.",
       ].join(" ");
     case "gestao": {
-      const pedido = mensagemUsuario?.trim();
+      const pedido = ajuste;
       if (!pedido) throw new Error("Escreva o que precisa revisar nos prompts.");
       return [
         "A FASE 2 está ativa. Trate o pedido abaixo seguindo as ETAPAS 4 e 5 do DOTTI AGENT 2.0.",

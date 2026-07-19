@@ -40,3 +40,14 @@ test("cada etapa tem uma instrução fechada e preserva o fluxo", () => {
   assert.match(montarInstrucaoDaEtapa("cenas"), /um prompt para cada bloco/i);
   assert.match(montarInstrucaoDaEtapa("gestao", "falharam 2 e 4"), /falharam 2 e 4/);
 });
+
+test("ajustes antes da confirmação ficam presos à etapa atual", () => {
+  assert.match(
+    montarInstrucaoDaEtapa("analise", "Troque a roupa do Character 1"),
+    /Troque a roupa do Character 1/
+  );
+  assert.match(
+    montarInstrucaoDaEtapa("referencias", "Use fundo cinza"),
+    /Use fundo cinza/
+  );
+});
