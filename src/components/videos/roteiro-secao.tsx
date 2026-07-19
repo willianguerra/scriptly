@@ -77,17 +77,34 @@ export function RoteiroSecao({
     ];
   }, [prompts, promptPadraoCanal]);
 
+  // Baseline do que já está persistido. Compararmos contra ele (em vez de
+  // "pular o primeiro render") evita saves espúrios do estado inicial — inclusive
+  // com o duplo-efeito do StrictMode — e a corrida com o "Gerar tudo".
+  type Snapshot = {
+    tema: string;
+    provider: ProviderRoteiro;
+    promptSistema: string;
+    roteiro: string;
+  };
+  const ultimoSalvo = React.useRef<Snapshot>({
+    tema: video.tema ?? "",
+    provider: normalizarProvider(video.provider),
+    promptSistema: video.promptSistema ?? "",
+    roteiro: video.roteiro ?? "",
+  });
+
   const salvar = React.useCallback(
-    async (patch: Partial<VideoSalvo>) => {
+    async (snap: Snapshot) => {
+      ultimoSalvo.current = snap;
       setStatusSalvamento("salvando");
       try {
         await atualizarVideo(video.id, {
-          tema: patch.tema ?? undefined,
-          provider: patch.provider ?? undefined,
-          promptSistema: patch.promptSistema ?? undefined,
-          roteiro: patch.roteiro ?? undefined,
+          tema: snap.tema,
+          provider: snap.provider,
+          promptSistema: snap.promptSistema,
+          roteiro: snap.roteiro,
         });
-        onVideoChange(patch);
+        onVideoChange(snap);
         setStatusSalvamento("salvo");
         window.setTimeout(() => setStatusSalvamento("idle"), 1500);
       } catch (e) {
@@ -98,19 +115,21 @@ export function RoteiroSecao({
     [video.id, onVideoChange]
   );
 
-  // Auto-save com debounce dos campos persistíveis (pula o primeiro render).
-  const montado = React.useRef(false);
+  // Auto-save com debounce: só dispara quando algo muda de fato vs. o salvo.
   React.useEffect(() => {
-    if (!montado.current) {
-      montado.current = true;
+    const snap: Snapshot = { tema, provider, promptSistema, roteiro };
+    const prev = ultimoSalvo.current;
+    if (
+      snap.tema === prev.tema &&
+      snap.provider === prev.provider &&
+      snap.promptSistema === prev.promptSistema &&
+      snap.roteiro === prev.roteiro
+    ) {
       return;
     }
-    const t = window.setTimeout(() => {
-      void salvar({ tema, provider, promptSistema, roteiro });
-    }, 800);
+    const t = window.setTimeout(() => void salvar(snap), 800);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tema, provider, promptSistema, roteiro]);
+  }, [tema, provider, promptSistema, roteiro, salvar]);
 
   function handleSelecionarPrompt(id: string) {
     setPromptId(id);

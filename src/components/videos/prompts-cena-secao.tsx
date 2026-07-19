@@ -63,8 +63,13 @@ export function PromptsCenaSecao({
   const [salvo, setSalvo] = React.useState(false);
   const [copiado, setCopiado] = React.useState(false);
 
+  // Baseline do que já está salvo — evita saves espúrios do valor inicial
+  // (inclusive com o duplo-efeito do StrictMode) e corrida com o "Gerar tudo".
+  const ultimoSalvo = React.useRef(video.promptsCena ?? "");
+
   const salvar = React.useCallback(
     async (texto: string) => {
+      ultimoSalvo.current = texto;
       setSalvando(true);
       try {
         await atualizarVideo(video.id, { promptsCena: texto });
@@ -85,19 +90,12 @@ export function PromptsCenaSecao({
     void salvar(texto);
   }
 
-  // Auto-save com debounce das edições manuais no painel salvo.
-  const montado = React.useRef(false);
+  // Auto-save com debounce: só quando o texto muda de fato vs. o salvo.
   React.useEffect(() => {
-    if (!montado.current) {
-      montado.current = true;
-      return;
-    }
-    const t = window.setTimeout(() => {
-      void salvar(promptsSalvos);
-    }, 800);
+    if (promptsSalvos === ultimoSalvo.current) return;
+    const t = window.setTimeout(() => void salvar(promptsSalvos), 800);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [promptsSalvos]);
+  }, [promptsSalvos, salvar]);
 
   async function handleCopiar() {
     try {

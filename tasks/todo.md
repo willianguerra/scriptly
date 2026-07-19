@@ -93,6 +93,21 @@ Cada tarefa tem **Aceite** (o que prova que ficou pronta) e **Verificação** (c
 
 ---
 
+## Extra — "Gerar tudo automaticamente" (pós-plano)
+
+- [x] **Orquestrador `lib/videos/pipeline.ts`** — encadeia roteiro → narração →
+  sincronização → prompts de cena, persistindo a cada passo; usa o título como tema se
+  vazio; reusa o roteiro existente se já houver.
+- [x] **Botão "Gerar tudo"** no shell do vídeo com barra de progresso por etapa; e
+  **"Criar e gerar tudo"** no diálogo de criação (abre o vídeo com `?auto=1` e inicia).
+- [x] **Bug corrigido (auto-save × StrictMode):** o skip "primeiro render" da RoteiroSecao/
+  PromptsCenaSecao era derrotado pelo duplo-efeito do StrictMode e salvava o estado inicial
+  vazio, apagando o roteiro numa corrida com a esteira. Trocado por comparação com o último
+  valor salvo (baseline) — só salva mudanças reais.
+- [x] **VALIDADO:** "Criar e gerar tudo" com só o título → esteira completa (roteiro fake,
+  Darkvi, Whisper, agente) → F5: roteiro/tema/voz/segmentos/promptsCena todos persistem;
+  estágio "Sincronizado". Sem erros de console. tsc/eslint limpos.
+
 ### Fora do MVP (fase futura)
 - Vista de **calendário mensal** e **quadro kanban** de status por canal.
 - **Persistir o MP3** da narração em storage externo (S3/R2/Vercel Blob).

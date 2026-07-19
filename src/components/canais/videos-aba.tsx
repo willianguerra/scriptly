@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   Trash2,
@@ -9,6 +10,7 @@ import {
   ArrowRight,
   Film,
   CalendarDays,
+  Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,7 @@ import { formatarDataCurta } from "@/lib/videos/data";
 import type { VideoSalvo } from "@/types/video";
 
 export function VideosAba({ channelId }: { channelId: string }) {
+  const router = useRouter();
   const [lista, setLista] = React.useState<VideoSalvo[]>([]);
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<string | null>(null);
@@ -69,7 +72,7 @@ export function VideosAba({ channelId }: { channelId: string }) {
     setDialogAberto(true);
   }
 
-  async function handleCriar() {
+  async function handleCriar(gerarTudo = false) {
     setErroForm(null);
     setSalvando(true);
     try {
@@ -77,6 +80,10 @@ export function VideosAba({ channelId }: { channelId: string }) {
         titulo,
         tema: tema.trim() || undefined,
       });
+      if (gerarTudo) {
+        router.push(`/videos/${criado.id}?auto=1`);
+        return;
+      }
       setLista((atual) => [criado, ...atual]);
       setDialogAberto(false);
     } catch (e) {
@@ -216,7 +223,7 @@ export function VideosAba({ channelId }: { channelId: string }) {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:justify-between">
             <Button
               variant="ghost"
               onClick={() => setDialogAberto(false)}
@@ -224,18 +231,29 @@ export function VideosAba({ channelId }: { channelId: string }) {
             >
               Cancelar
             </Button>
-            <Button
-              className="gap-2"
-              onClick={handleCriar}
-              disabled={!titulo.trim() || salvando}
-            >
-              {salvando ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              Criar vídeo
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => handleCriar(false)}
+                disabled={!titulo.trim() || salvando}
+              >
+                {salvando ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                Só criar
+              </Button>
+              <Button
+                className="gap-2"
+                onClick={() => handleCriar(true)}
+                disabled={!titulo.trim() || salvando}
+              >
+                <Sparkles className="h-4 w-4" />
+                Criar e gerar tudo
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
