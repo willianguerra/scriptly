@@ -25,6 +25,7 @@ type VideoRow = {
   segmentos: unknown;
   timings: unknown;
   srt: string | null;
+  promptsCena: string | null;
   notas: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -44,6 +45,7 @@ export function toVideoDTO(v: VideoRow): VideoSalvo {
     segmentos: v.segmentos ?? null,
     timings: v.timings ?? null,
     srt: v.srt,
+    promptsCena: v.promptsCena,
     notas: v.notas,
     criadoEm: v.createdAt.getTime(),
     atualizadoEm: v.updatedAt.getTime(),

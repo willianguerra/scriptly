@@ -18,6 +18,7 @@ const updateSchema = z.object({
   segmentos: z.any().optional(),
   timings: z.any().optional(),
   srt: z.string().max(500_000).nullable().optional(),
+  promptsCena: z.string().max(500_000).nullable().optional(),
   notas: z.string().max(20_000).nullable().optional(),
 });
 

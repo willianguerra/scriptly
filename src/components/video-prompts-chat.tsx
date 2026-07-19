@@ -44,6 +44,7 @@ export function VideoPromptsChat({
   sincronizacao,
   liberado,
   onConcluidoChange,
+  onResultado,
 }: {
   status: EtapaStatus;
   provider: ProviderRoteiro;
@@ -51,6 +52,8 @@ export function VideoPromptsChat({
   sincronizacao: string;
   liberado: boolean;
   onConcluidoChange: (concluido: boolean) => void;
+  /** Chamado quando o agente termina de gerar os prompts de cena (opcional). */
+  onResultado?: (texto: string) => void;
 }) {
   const [estado, setEstado] = React.useState<EstadoConversa>("inicio");
   const [mensagens, setMensagens] = React.useState<MensagemChatPrompts[]>([]);
@@ -111,6 +114,7 @@ export function VideoPromptsChat({
       if (etapa === "cenas") {
         setResultadoCenas(resultado.texto);
         onConcluidoChange(true);
+        onResultado?.(resultado.texto);
       }
     } catch (error) {
       setMensagens(historicoAnterior);

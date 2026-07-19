@@ -78,6 +78,7 @@ model Video {
   segmentos     Json?
   timings       Json?
   srt           String?
+  promptsCena   String?
   notas         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

@@ -14,6 +14,7 @@ export interface VideoSalvo {
   segmentos: unknown;
   timings: unknown;
   srt: string | null;
+  promptsCena: string | null;
   notas: string | null;
   criadoEm: number;
   atualizadoEm: number;

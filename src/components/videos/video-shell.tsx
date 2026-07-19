@@ -2,16 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronLeft, Film, Loader2, Images } from "lucide-react";
+import { ChevronLeft, Film, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { obterVideo } from "@/lib/videos/client";
 import { obterCanal } from "@/lib/channels/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
 import { RoteiroSecao } from "@/components/videos/roteiro-secao";
 import { NarracaoSincronizacaoSecao } from "@/components/videos/narracao-sincronizacao-secao";
+import { PromptsCenaSecao } from "@/components/videos/prompts-cena-secao";
 import type { VideoSalvo } from "@/types/video";
 
 export function VideoShell({ id }: { id: string }) {
@@ -120,19 +120,7 @@ export function VideoShell({ id }: { id: string }) {
         onVideoChange={handleVideoChange}
       />
 
-      <Card>
-        <CardContent className="flex items-center gap-4 p-5">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-            <Images className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="font-medium">Prompts de imagem</p>
-            <p className="text-sm text-muted-foreground">
-              Prompts de cena a partir do roteiro (Fase 5).
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <PromptsCenaSecao video={video} onVideoChange={handleVideoChange} />
     </div>
   );
 }

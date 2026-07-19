@@ -62,15 +62,21 @@ Cada tarefa tem **Aceite** (o que prova que ficou pronta) e **Verificação** (c
 
 ## Fase 5 — Prompts de imagem/cena por vídeo
 
-- [ ] **5.1 Schema `ScenePrompt`** + `prisma db push`.
-- [ ] **5.2 API `/api/videos/[id]/prompts`** (GET/POST/PATCH/DELETE, reordenar), escopo por
-  canal→usuário.
-- [ ] **5.3 UI — seção "Prompts de imagem" no vídeo**
-  - Gerar lista a partir do roteiro reusando `src/lib/separar-prompts.ts`; editar, copiar,
-    baixar (.txt/zip como no Separador atual).
-  - **Aceite:** gerar prompts de cena do roteiro, editar um, recarregar, persiste.
-- [ ] **5.4 Prompt de roteiro do vídeo** — expor edição/salvamento do `promptSistema` do
-  vídeo junto à etapa de roteiro (fecha o "ambos").
+> Mudança de abordagem (melhor que o plano): a base do origin/main já tem o agente
+> `VideoPromptsChat` (DOTTI AGENT 2.0) que gera prompts de cena sincronizados. Reusei
+> esse agente em vez de recriar via separador — só faltava PERSISTIR.
+
+- [x] **5.1 Campo `promptsCena` (texto) no `Video`** (em vez de tabela ScenePrompt — o
+  agente produz um bloco de texto sincronizado) + `db push`. DTO/client/rota atualizados.
+- [x] **5.2 Persistência** — `VideoPromptsChat` ganhou callback opcional `onResultado`
+  (retrocompatível; Estúdio não usa). `prompts-cena-secao.tsx` salva o resultado via PATCH
+  e mantém painel editável (auto-save 800ms) com copiar/baixar.
+- [x] **5.3 UI — seção no vídeo** — reusa o agente (roteiro+sincronização já carregados do
+  vídeo) + painel "Prompts de cena salvos" ao reabrir.
+- [x] **5.4 "Ambos" fechado** — prompt de roteiro persiste (Fase 3) + prompts de cena
+  persistem (esta fase).
+- [x] **VALIDADO:** rodado o agente (fake, 3 etapas), gerou prompts (3299 chars), F5 →
+  painel salvo carrega o texto persistido. Sem erros de console. tsc/eslint limpos.
 
 ## Fase 6 — Data agendada + limpeza de navegação
 
