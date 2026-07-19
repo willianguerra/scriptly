@@ -323,11 +323,13 @@ export function Estudio() {
         </Badge>
       </div>
 
-      <EtapasNavegacao
-        roteiro={statusRoteiro}
-        audio={statusAudio}
-        sincronizacao={statusSincronizacao}
-      />
+      <div className="xl:hidden">
+        <EtapasNavegacao
+          roteiro={statusRoteiro}
+          audio={statusAudio}
+          sincronizacao={statusSincronizacao}
+        />
+      </div>
 
       {erro && (
         <div
@@ -427,11 +429,12 @@ export function Estudio() {
 
         <ResumoProjeto
           progresso={progresso}
-          temRoteiro={temRoteiro}
-          temAudio={temAudio}
-          temSincronizacao={temSincronizacao}
+          statusRoteiro={statusRoteiro}
+          statusAudio={statusAudio}
+          statusSincronizacao={statusSincronizacao}
           proximaAcao={proximaAcao}
           proximaAcaoHref={proximaAcaoHref}
+          temRoteiro={temRoteiro}
           palavras={palavrasRoteiro}
           minutosEstimados={minutosEstimados}
         />

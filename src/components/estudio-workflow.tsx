@@ -81,7 +81,7 @@ function EtapaCabecalho({
   status: EtapaStatus;
 }) {
   return (
-    <CardHeader className="border-b pb-5">
+    <CardHeader className="border-b py-5!">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span
           className={`grid size-9 shrink-0 place-items-center rounded-lg ${
@@ -693,27 +693,34 @@ export function SincronizacaoEtapa({
 
 export function ResumoProjeto({
   progresso,
-  temRoteiro,
-  temAudio,
-  temSincronizacao,
+  statusRoteiro,
+  statusAudio,
+  statusSincronizacao,
   proximaAcao,
   proximaAcaoHref,
+  temRoteiro,
   palavras,
   minutosEstimados,
 }: {
   progresso: number;
-  temRoteiro: boolean;
-  temAudio: boolean;
-  temSincronizacao: boolean;
+  statusRoteiro: EtapaStatus;
+  statusAudio: EtapaStatus;
+  statusSincronizacao: EtapaStatus;
   proximaAcao: string;
   proximaAcaoHref: string | null;
+  temRoteiro: boolean;
   palavras: number;
   minutosEstimados: number;
 }) {
-  const itens: [string, boolean][] = [
-    ["Roteiro revisado", temRoteiro],
-    ["Narração gerada", temAudio],
-    ["Arquivos sincronizados", temSincronizacao],
+  const etapas = [
+    { numero: 1, titulo: "Roteiro", href: "#etapa-roteiro", status: statusRoteiro },
+    { numero: 2, titulo: "Narração", href: "#etapa-narracao", status: statusAudio },
+    {
+      numero: 3,
+      titulo: "Sincronização",
+      href: "#etapa-sincronizacao",
+      status: statusSincronizacao,
+    },
   ];
 
   return (
@@ -721,7 +728,7 @@ export function ResumoProjeto({
       <Card className="gap-5 py-5 shadow-none">
         <CardHeader className="gap-1 px-5">
           <CardTitle><h2 className="text-base">Resumo do projeto</h2></CardTitle>
-          <CardDescription>Acompanhe o que falta para finalizar.</CardDescription>
+          <CardDescription>Acompanhe e navegue pelas etapas.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5 px-5">
           <div className="space-y-2">
@@ -732,15 +739,47 @@ export function ResumoProjeto({
             <Progress value={progresso} aria-label={`${progresso}% do projeto concluído`} />
           </div>
 
-          <ol className="space-y-3 text-sm">
-            {itens.map(([label, done]) => (
-              <li key={label} className="flex items-center gap-2.5">
-                {done ? (
-                  <CheckCircle2 className="size-4 shrink-0 text-primary" aria-hidden="true" />
-                ) : (
-                  <CircleDashed className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <ol className="relative hidden space-y-1 xl:block">
+            {etapas.map((etapa, index) => (
+              <li key={etapa.numero} className="relative">
+                {index < etapas.length - 1 && (
+                  <span
+                    aria-hidden="true"
+                    className={`absolute left-[1.4375rem] top-9 h-[calc(100%-1rem)] w-px ${
+                      etapa.status === "concluida" ? "bg-primary/40" : "bg-border"
+                    }`}
+                  />
                 )}
-                <span className={done ? "text-foreground" : "text-muted-foreground"}>{label}</span>
+                <a
+                  href={etapa.href}
+                  aria-current={etapa.status === "atual" ? "step" : undefined}
+                  className={`group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                    etapa.status === "atual" ? "bg-primary/5" : "hover:bg-muted/60"
+                  }`}
+                >
+                  <span
+                    className={`relative z-10 grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${
+                      etapa.status === "concluida"
+                        ? "bg-primary text-primary-foreground"
+                        : etapa.status === "atual"
+                          ? "bg-primary/12 text-primary ring-1 ring-primary/25"
+                          : "bg-muted text-muted-foreground"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {etapa.status === "concluida" ? (
+                      <CheckCircle2 className="size-4" />
+                    ) : (
+                      etapa.numero
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{etapa.titulo}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {STATUS_LABEL[etapa.status]}
+                    </span>
+                  </span>
+                </a>
               </li>
             ))}
           </ol>
