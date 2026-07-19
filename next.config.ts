@@ -18,7 +18,10 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob:",
               "media-src 'self' blob:",
               "object-src 'none'",
-              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+              // 'blob:' é necessário para o onnxruntime-web (backend WASM do
+              // Whisper via transformers.js), que instancia scripts/worker a
+              // partir de URLs blob durante a transcrição no navegador.
+              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:",
               "style-src 'self' 'unsafe-inline'",
               "worker-src 'self' blob:",
             ].join("; "),
