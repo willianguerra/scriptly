@@ -40,6 +40,11 @@ import {
 import type { ProviderRoteiro } from "@/lib/roteiro/types";
 import { gerarRoteiro } from "@/lib/roteiro-client";
 import { transcribeSamples } from "@/lib/whisper-browser";
+import {
+  escolherVozPreferida,
+  lerPreferenciaVoz,
+  salvarPreferenciaVoz,
+} from "@/lib/voice-preference";
 import type { DarkviVoice } from "@/types/darkvi";
 import type { PromptSalvo } from "@/types/prompt";
 
@@ -122,7 +127,12 @@ export function Estudio() {
       .then((lista) => {
         if (!ativo) return;
         setVozes(lista);
-        if (lista.length > 0) setVoz(lista[0].idApi);
+        const preferida = escolherVozPreferida(
+          lista.map((item) => item.idApi),
+          lerPreferenciaVoz()
+        );
+        setVoz(preferida);
+        salvarPreferenciaVoz(preferida);
       })
       .catch((error) => {
         if (!ativo) return;
@@ -147,6 +157,11 @@ export function Estudio() {
     }
     const escolhido = prompts.find((prompt) => prompt.id === id);
     if (escolhido) setPromptSistema(escolhido.texto);
+  }
+
+  function handleVozChange(value: string) {
+    setVoz(value);
+    salvarPreferenciaVoz(value);
   }
 
   function handlePromptSistemaChange(value: string) {
@@ -380,7 +395,7 @@ export function Estudio() {
             gerando={gerandoAudio}
             audioUrl={audioUrl}
             minutosEstimados={minutosEstimados}
-            onVozChange={setVoz}
+            onVozChange={handleVozChange}
             onGerar={handleGerarAudio}
             onBaixar={() => baixarBlob(audioGerado, "narracao.mp3")}
           />
