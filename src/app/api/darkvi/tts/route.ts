@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { DARKVI_BASE_URL, missingTokenResponse, resolveToken } from "@/lib/darkvi-server";
+import { DARKVI_BASE_URL, missingTokenResponse, resolverTokenDarkvi } from "@/lib/darkvi-server";
 
 // POST /api/darkvi/tts -> proxy para POST https://darkvi.com/api/tts
 // body: { text: string, voice: string, title?: string }
 export async function POST(req: Request) {
-  const token = resolveToken(req);
+  const token = await resolverTokenDarkvi();
   if (!token) return missingTokenResponse();
 
   const body = await req.json().catch(() => null);

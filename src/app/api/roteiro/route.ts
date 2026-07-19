@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import {
   criarProvider,
   ehProviderValido,
-  resolverChave,
 } from "@/lib/roteiro/provider-server";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { resolverChaveDoUsuario } from "@/lib/credentials/store";
 import type { EntradaRoteiro } from "@/lib/roteiro/types";
+
+export const runtime = "nodejs";
 
 // POST /api/roteiro -> gera um roteiro com o provider escolhido.
 // body: {
@@ -14,9 +17,17 @@ import type { EntradaRoteiro } from "@/lib/roteiro/types";
 //   promptSistema?: string,
 //   variaveis?: Record<string, string>
 // }
-// A chave de cada provider vem do header (x-gemini-key / x-openai-key) ou, em
-// fallback, da env do servidor (GEMINI_API_KEY / OPENAI_API_KEY).
+// A chave de cada provider é a chave própria do usuário (guardada criptografada
+// no banco); admins podem cair no fallback da env do servidor.
 export async function POST(req: Request) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, error: true, code: "UNAUTHENTICATED", message: "Não autenticado." },
+      { status: 401 }
+    );
+  }
+
   const body = await req.json().catch(() => null);
 
   const provider = body?.provider;
@@ -45,7 +56,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const chave = resolverChave(provider, req);
+  const chave =
+    provider === "fake" ? "" : await resolverChaveDoUsuario(provider, user);
 
   const entrada: EntradaRoteiro = {
     tema,

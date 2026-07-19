@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VideoPromptsChat } from "@/components/video-prompts-chat";
+import { useUsuarioAtual } from "@/components/user-context";
 
 import {
   MAX_SEGMENT_SECONDS,
@@ -83,6 +84,7 @@ function normalizarSegundos(valor: number): number {
 }
 
 export function Estudio() {
+  const { username } = useUsuarioAtual();
   const [tema, setTema] = React.useState("");
   const [provider, setProvider] = React.useState<ProviderRoteiro>("fake");
   const [promptSistema, setPromptSistema] = React.useState("");
@@ -135,10 +137,10 @@ export function Estudio() {
         setVozes(lista);
         const preferida = escolherVozPreferida(
           lista.map((item) => item.idApi),
-          lerPreferenciaVoz()
+          lerPreferenciaVoz(username)
         );
         setVoz(preferida);
-        salvarPreferenciaVoz(preferida);
+        salvarPreferenciaVoz(preferida, username);
       })
       .catch((error) => {
         if (!ativo) return;
@@ -147,7 +149,7 @@ export function Estudio() {
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [username]);
 
   React.useEffect(() => {
     return () => {
@@ -167,7 +169,7 @@ export function Estudio() {
 
   function handleVozChange(value: string) {
     setVoz(value);
-    salvarPreferenciaVoz(value);
+    salvarPreferenciaVoz(value, username);
   }
 
   function handlePromptSistemaChange(value: string) {

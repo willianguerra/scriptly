@@ -78,10 +78,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
   }
 
+  // Senha correta, mas o cadastro ainda não foi liberado pelo admin. Não é uma
+  // tentativa maliciosa, então não conta no rate-limit; devolvemos 403.
+  if (usuario.status !== "APPROVED") {
+    const mensagem =
+      usuario.status === "PENDING"
+        ? "Seu cadastro está aguardando aprovação do administrador."
+        : usuario.status === "SUSPENDED"
+        ? "Seu acesso foi suspenso. Fale com o administrador."
+        : "Seu cadastro não foi aprovado.";
+    return NextResponse.json({ error: mensagem }, { status: 403 });
+  }
+
   loginLimiter.reset(key);
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = await createSessionToken(
-    { username: usuario.username, expiresAt },
+    { username: usuario.username, role: usuario.role, expiresAt },
     sessionSecret
   );
   const response = NextResponse.json({ username: usuario.username });

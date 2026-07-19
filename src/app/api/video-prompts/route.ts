@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { ehProviderValido, resolverChave } from "@/lib/roteiro/provider-server";
+import { ehProviderValido } from "@/lib/roteiro/provider-server";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { resolverChaveDoUsuario } from "@/lib/credentials/store";
 import {
   gerarRespostaDoAgente,
 } from "@/lib/video-prompts/server";
@@ -46,6 +48,14 @@ function mensagensValidas(valor: unknown): valor is MensagemChatPrompts[] {
 }
 
 export async function POST(req: Request) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "Não autenticado." },
+      { status: 401 }
+    );
+  }
+
   const body = await req.json().catch(() => null);
   const provider = body?.provider;
   const etapa = body?.etapa;
@@ -99,7 +109,10 @@ export async function POST(req: Request) {
       mensagens: body.mensagens,
       mensagemUsuario: body.mensagemUsuario,
       modelo: typeof body.modelo === "string" ? body.modelo : undefined,
-      chave: resolverChave(provider, req),
+      chave:
+        provider === "fake"
+          ? ""
+          : await resolverChaveDoUsuario(provider, user),
     });
     return NextResponse.json({ ok: true, ...resultado });
   } catch (error) {

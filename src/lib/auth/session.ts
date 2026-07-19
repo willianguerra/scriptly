@@ -1,8 +1,13 @@
 export const SESSION_COOKIE_NAME = "scriptly_session";
 export const SESSION_DURATION_MS = 8 * 60 * 60 * 1_000;
 
+// Union de string (não o enum do Prisma) para o token continuar válido no
+// runtime edge do middleware, que não pode importar o client do Prisma.
+export type SessionRole = "ADMIN" | "USER";
+
 export type Session = {
   username: string;
+  role: SessionRole;
   expiresAt: number;
 };
 
@@ -50,6 +55,7 @@ function isSession(value: unknown): value is Session {
     typeof session.username === "string" &&
     session.username.length > 0 &&
     session.username.length <= 100 &&
+    (session.role === "ADMIN" || session.role === "USER") &&
     Number.isSafeInteger(session.expiresAt)
   );
 }

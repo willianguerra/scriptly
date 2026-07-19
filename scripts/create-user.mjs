@@ -1,11 +1,14 @@
 // Cria ou atualiza um usuário no banco (tabela User).
 //
 // Uso (o --env-file carrega DATABASE_URL do .env):
-//   node --env-file=.env scripts/create-user.mjs --username=admin --password=segredo
+//   node --env-file=.env scripts/create-user.mjs --username=admin --password=segredo --admin
 //   node --env-file=.env scripts/create-user.mjs --username=joao          (gera senha)
 //   node --env-file=.env scripts/create-user.mjs --from-env               (semeia a partir de AUTH_USERNAME/AUTH_PASSWORD_HASH)
 //
-// Também exposto como: npm run db:create-user -- --username=... --password=...
+// Usuários criados por aqui já entram como APPROVED (é uma ação do admin no
+// terminal). Use --admin para dar papel de administrador (acesso ao /admin).
+//
+// Também exposto como: npm run db:create-user -- --username=... --password=... --admin
 
 import { randomBytes, scrypt } from "node:crypto";
 import { promisify } from "node:util";
@@ -53,13 +56,24 @@ async function main() {
     passwordHash = await hashPassword(password);
   }
 
+  const role = hasFlag("admin") ? "ADMIN" : "USER";
+
   const user = await prisma.user.upsert({
     where: { username },
-    update: { passwordHash },
-    create: { username, passwordHash },
+    update: { passwordHash, role, status: "APPROVED" },
+    create: {
+      username,
+      passwordHash,
+      role,
+      status: "APPROVED",
+      approvedAt: new Date(),
+      approvedBy: "cli",
+    },
   });
 
-  console.log(`Usuário salvo no banco: ${user.username}`);
+  console.log(
+    `Usuário salvo no banco: ${user.username} (papel: ${user.role}, status: ${user.status})`
+  );
   if (senhaGerada) {
     console.log(`Senha gerada (guarde em local seguro): ${senhaGerada}`);
   }
