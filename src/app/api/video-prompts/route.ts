@@ -26,6 +26,14 @@ function mensagensValidas(valor: unknown): valor is MensagemChatPrompts[] {
   return (
     Array.isArray(valor) &&
     valor.length <= 40 &&
+    valor.reduce(
+      (total, item) =>
+        total +
+        (item && typeof item === "object" && typeof item.content === "string"
+          ? item.content.length
+          : 0),
+      0
+    ) <= 1_500_000 &&
     valor.every(
       (item) =>
         item &&

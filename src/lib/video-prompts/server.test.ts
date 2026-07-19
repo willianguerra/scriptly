@@ -86,3 +86,31 @@ test("continua automaticamente quando a OpenAI interrompe por limite", async () 
     globalThis.fetch = fetchOriginal;
   }
 });
+
+test("não entrega resposta parcial bloqueada pelo provider", async () => {
+  const fetchOriginal = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response(
+      JSON.stringify({
+        choices: [
+          { message: { content: "PROMPT 001 incompleto" }, finish_reason: "content_filter" },
+        ],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+
+  try {
+    await assert.rejects(
+      () =>
+        gerarRespostaDoAgente({
+          ...entradaBase,
+          provider: "openai",
+          etapa: "cenas",
+          chave: "chave-teste",
+        }),
+      /interrompida.*content_filter/i
+    );
+  } finally {
+    globalThis.fetch = fetchOriginal;
+  }
+});

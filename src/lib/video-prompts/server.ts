@@ -169,7 +169,11 @@ async function gerarComOpenAI(
     if (!texto) throw new Error("A OpenAI não retornou texto para os prompts.");
     respostaCompleta += texto;
 
-    if (data?.choices?.[0]?.finish_reason !== "length") return respostaCompleta.trim();
+    const motivo = data?.choices?.[0]?.finish_reason;
+    if (motivo === "stop") return respostaCompleta.trim();
+    if (motivo !== "length") {
+      throw new Error(`A resposta da OpenAI foi interrompida (${motivo ?? "motivo desconhecido"}).`);
+    }
 
     mensagens.push({ role: "assistant", content: texto });
     mensagens.push({
@@ -241,8 +245,10 @@ async function gerarComGemini(
     if (!texto) throw new Error("O Gemini não retornou texto para os prompts.");
     respostaCompleta += texto;
 
-    if (data?.candidates?.[0]?.finishReason !== "MAX_TOKENS") {
-      return respostaCompleta.trim();
+    const motivo = data?.candidates?.[0]?.finishReason;
+    if (motivo === "STOP") return respostaCompleta.trim();
+    if (motivo !== "MAX_TOKENS") {
+      throw new Error(`A resposta do Gemini foi interrompida (${motivo ?? "motivo desconhecido"}).`);
     }
 
     contents.push({ role: "model", parts: [{ text: texto }] });
