@@ -51,16 +51,14 @@ Cada tarefa tem **Aceite** (o que prova que ficou pronta) e **Verificação** (c
 
 ## Fase 4 — Narração + Sincronização persistidas
 
-- [ ] **4.1 Narração no vídeo**
-  - Reusar `NarracaoEtapa`; gerar áudio efêmero; salvar apenas `voz` (PATCH).
-  - Ao reabrir com roteiro: botão "gerar áudio" regenera on-demand; se sem chave Darkvi,
-    aviso claro mas ainda permite baixar artefatos salvos.
-- [ ] **4.2 Sincronização no vídeo**
-  - Reusar `SincronizacaoEtapa` (Whisper no browser); ao concluir, PATCH salva
-    `segmentos/timings/srt`.
-  - **Aceite:** sincronizar, recarregar, segmentos/SRT persistem e baixam.
-  - **Verificação:** preview — fluxo completo; F5; baixar `.srt` e `timings.json`.
-- [ ] **CP-C — checkpoint:** Estúdio completo persistido dentro do vídeo.
+- [x] **4.1 Narração no vídeo** — `videos/narracao-sincronizacao-secao.tsx` reusa
+  `NarracaoEtapa`; gera áudio efêmero (Darkvi); salva só `voz` (PATCH) + preferência.
+- [x] **4.2 Sincronização no vídeo** — reusa `SincronizacaoEtapa` (Whisper no browser);
+  ao concluir, PATCH salva `segmentos/timings/srt`; ao reabrir sem áudio, mostra o
+  resultado salvo com aviso e libera downloads (SRT/timings/TXT).
+- [x] **CP-C — VALIDADO:** fluxo completo no navegador — gerar narração (Darkvi, voz
+  ALe), sincronizar (Whisper, 4 blocos), F5 → estágio "Sincronizado", 4 blocos persistem,
+  voz salva, aviso de áudio-não-persistido. Sem erros de console. tsc/eslint limpos.
 
 ## Fase 5 — Prompts de imagem/cena por vídeo
 

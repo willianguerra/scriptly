@@ -2,14 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  ChevronLeft,
-  Film,
-  Loader2,
-  AudioLines,
-  ListChecks,
-  Images,
-} from "lucide-react";
+import { ChevronLeft, Film, Loader2, Images } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,25 +11,8 @@ import { obterVideo } from "@/lib/videos/client";
 import { obterCanal } from "@/lib/channels/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
 import { RoteiroSecao } from "@/components/videos/roteiro-secao";
+import { NarracaoSincronizacaoSecao } from "@/components/videos/narracao-sincronizacao-secao";
 import type { VideoSalvo } from "@/types/video";
-
-const PLACEHOLDERS = [
-  {
-    icon: AudioLines,
-    titulo: "Narração",
-    descricao: "Escolha a voz e gere a narração (Fase 4).",
-  },
-  {
-    icon: ListChecks,
-    titulo: "Sincronização",
-    descricao: "Transcreva e gere legenda/timings (Fase 4).",
-  },
-  {
-    icon: Images,
-    titulo: "Prompts de imagem",
-    descricao: "Prompts de cena a partir do roteiro (Fase 5).",
-  },
-];
 
 export function VideoShell({ id }: { id: string }) {
   const [video, setVideo] = React.useState<VideoSalvo | null>(null);
@@ -139,21 +115,24 @@ export function VideoShell({ id }: { id: string }) {
         onVideoChange={handleVideoChange}
       />
 
-      <div className="grid gap-4">
-        {PLACEHOLDERS.map(({ icon: Icon, titulo, descricao }) => (
-          <Card key={titulo}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                <Icon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="font-medium">{titulo}</p>
-                <p className="text-sm text-muted-foreground">{descricao}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <NarracaoSincronizacaoSecao
+        video={video}
+        onVideoChange={handleVideoChange}
+      />
+
+      <Card>
+        <CardContent className="flex items-center gap-4 p-5">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+            <Images className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-medium">Prompts de imagem</p>
+            <p className="text-sm text-muted-foreground">
+              Prompts de cena a partir do roteiro (Fase 5).
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
