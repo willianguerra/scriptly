@@ -2,7 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Plus, Trash2, Loader2, ArrowRight, Film } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Loader2,
+  ArrowRight,
+  Film,
+  CalendarDays,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +30,7 @@ import {
   excluirVideo,
 } from "@/lib/videos/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
+import { formatarDataCurta } from "@/lib/videos/data";
 import type { VideoSalvo } from "@/types/video";
 
 export function VideosAba({ channelId }: { channelId: string }) {
@@ -137,6 +145,12 @@ export function VideosAba({ channelId }: { channelId: string }) {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
+                    {v.scheduledAt != null && (
+                      <span className="hidden items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground sm:inline-flex">
+                        <CalendarDays className="h-3 w-3" />
+                        {formatarDataCurta(v.scheduledAt)}
+                      </span>
+                    )}
                     <span
                       className={`hidden rounded-md px-2 py-0.5 text-xs sm:inline ${estagio.classe}`}
                     >

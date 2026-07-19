@@ -80,16 +80,16 @@ Cada tarefa tem **Aceite** (o que prova que ficou pronta) e **Verificação** (c
 
 ## Fase 6 — Data agendada + limpeza de navegação
 
-- [ ] **6.1 `scheduledAt` no vídeo** — campo de data editável (PATCH); badge/ordenação por
-  data na lista de vídeos do canal.
-  - **Aceite:** agendar data, aparece na lista e persiste.
-- [ ] **6.2 Aposentar `/estudio`** — remover rota `src/app/estudio/` e referências;
-  redirecionar para `/canais` se necessário.
-- [ ] **6.3 Reagrupar ferramentas auxiliares** (divisor de áudio, thumbnail, contadores,
-  link de inscrição) num grupo "Ferramentas" na nav.
-- [ ] **6.4 Doc** — anotar "vista de calendário mensal / kanban de status" como fase
-  futura no `tasks/plan.md`.
-- [ ] **CP-D — checkpoint final:** app canal-cêntrico completo; `/estudio` removido.
+- [x] **6.1 `scheduledAt` no vídeo** — input de data no shell do vídeo (`lib/videos/
+  data.ts` p/ conversão UTC), PATCH ao mudar; badge de data na lista do canal; API já
+  ordena por `scheduledAt asc`. **Validado:** data 2026-08-15 persiste e aparece na lista.
+- [x] **6.2 Aposentar `/estudio`** — rota vira `redirect("/")`; `estudio.tsx` removido
+  (código morto; a lógica vive nas seções do vídeo). **Validado:** `/estudio` → `/`.
+- [x] **6.3 Ferramentas auxiliares** já agrupadas em "Ferramentas" (Fase 1); textos que
+  citavam "Estúdio" atualizados para "vídeos" (configuracoes, biblioteca, prompts).
+- [x] **6.4 Doc** — calendário mensal / kanban registrados como fase futura no plano.
+- [x] **CP-D — VALIDADO:** app canal-cêntrico completo; `/estudio` aposentado; sem erros
+  de console; tsc/eslint limpos.
 
 ---
 

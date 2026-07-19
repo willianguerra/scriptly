@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
-import { Estudio } from "@/components/estudio";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Estúdio",
-  description:
-    "Gere o roteiro com IA (Gemini ou GPT), sintetize a narração na Darkvi e sincronize o texto ao áudio em legenda SRT e timings.json.",
-};
-
+// O Estúdio avulso foi aposentado: o fluxo (roteiro → narração → sincronização →
+// prompts de cena) agora vive dentro de cada vídeo, em /canais → vídeo.
 export default function EstudioPage() {
-  return <Estudio />;
+  redirect("/");
 }

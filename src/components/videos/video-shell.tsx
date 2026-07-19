@@ -2,13 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronLeft, Film, Loader2 } from "lucide-react";
+import { CalendarDays, ChevronLeft, Film, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { obterVideo } from "@/lib/videos/client";
+import { atualizarVideo, obterVideo } from "@/lib/videos/client";
 import { obterCanal } from "@/lib/channels/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
+import { msParaInputDate, inputDateParaISO } from "@/lib/videos/data";
 import { RoteiroSecao } from "@/components/videos/roteiro-secao";
 import { NarracaoSincronizacaoSecao } from "@/components/videos/narracao-sincronizacao-secao";
 import { PromptsCenaSecao } from "@/components/videos/prompts-cena-secao";
@@ -51,6 +53,18 @@ export function VideoShell({ id }: { id: string }) {
   const handleVideoChange = React.useCallback((patch: Partial<VideoSalvo>) => {
     setVideo((atual) => (atual ? { ...atual, ...patch } : atual));
   }, []);
+
+  const handleAgendarChange = React.useCallback(
+    (valor: string) => {
+      if (!video) return;
+      const iso = inputDateParaISO(valor);
+      setVideo((atual) =>
+        atual ? { ...atual, scheduledAt: iso ? Date.parse(iso) : null } : atual
+      );
+      atualizarVideo(video.id, { scheduledAt: iso }).catch(() => {});
+    },
+    [video]
+  );
 
   if (carregando) {
     return (
@@ -107,6 +121,32 @@ export function VideoShell({ id }: { id: string }) {
           </span>
         </div>
         <Progress value={estagio.progresso} className="h-1.5" />
+
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <label
+            htmlFor="agenda-video"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground"
+          >
+            <CalendarDays className="h-4 w-4" /> Publicação:
+          </label>
+          <Input
+            id="agenda-video"
+            type="date"
+            value={msParaInputDate(video.scheduledAt)}
+            onChange={(e) => handleAgendarChange(e.target.value)}
+            className="h-8 w-auto"
+          />
+          {video.scheduledAt != null && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleAgendarChange("")}
+            >
+              Limpar
+            </Button>
+          )}
+        </div>
       </div>
 
       <RoteiroSecao
