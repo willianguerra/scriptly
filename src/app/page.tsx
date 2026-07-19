@@ -1,10 +1,5 @@
-import Background from "@/components/background";
-import ConversorRoteiros from "@/components/conversor-roteiros";
+import { CanaisLista } from "@/components/canais/canais-lista";
 
 export default function Home() {
-  return (
-    <Background>
-      <ConversorRoteiros />
-    </Background>
-  );
+  return <CanaisLista />;
 }
