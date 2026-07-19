@@ -11,7 +11,9 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "base-uri 'self'",
-              "connect-src 'self' https:",
+              // 'blob:' cobre o fetch do binário .wasm que o onnxruntime-web
+              // pode servir a partir de uma URL blob durante a transcrição.
+              "connect-src 'self' https: blob:",
               "font-src 'self' data:",
               "form-action 'self'",
               "frame-ancestors 'none'",
