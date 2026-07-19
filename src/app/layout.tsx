@@ -6,7 +6,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import AppShell from "@/components/app-shell";
 import { LoginScreen } from "@/components/auth/login-screen";
-import { getServerSession } from "@/lib/auth/server";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -95,7 +95,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession();
+  // Relê o usuário do banco (não só o token do cookie): assim uma suspensão ou
+  // remoção feita pelo admin derruba o acesso já no próximo carregamento de
+  // página, sem esperar a sessão de 8h expirar.
+  const user = await getCurrentUser();
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
@@ -104,8 +107,8 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          {session ? (
-            <AppShell username={session.username} role={session.role}>
+          {user ? (
+            <AppShell username={user.username} role={user.role}>
               {children}
             </AppShell>
           ) : (

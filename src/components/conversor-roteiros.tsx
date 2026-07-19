@@ -35,6 +35,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
+import { useUsuarioAtual } from "@/components/user-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { baixarSRT, baixarZIP } from "@/lib/fileUtils";
 import { converterParaSRT, INTERVALO_ENTRE_ROTEIROS } from "@/lib/srtConverter";
@@ -52,12 +53,17 @@ import {
 import type { Roteiro } from "@/types/roteiro";
 import type { DarkviVoice, RoteiroAudio } from "@/types/darkvi";
 
-const STORAGE_KEY = "roteiros-salvos";
+// Chave por usuário: mantém os rascunhos de cada conta separados, mesmo num
+// navegador compartilhado. LEGACY_STORAGE_KEY era a chave global antiga.
+const LEGACY_STORAGE_KEY = "roteiros-salvos";
+const storageKeyDoUsuario = (username: string) => `roteiros-salvos:${username}`;
 const LEGACY_VOICE_STORAGE_KEY = "darkvi-voz";
 
 const LIMITE_TEXTO = 80000; // limite da API Darkvi
 
 export default function ConversorRoteiros() {
+  const { username } = useUsuarioAtual();
+  const storageKey = storageKeyDoUsuario(username);
   const [roteiros, setRoteiros] = useState<Roteiro[]>([{ titulo: "", texto: "" }]);
   const [resultado, setResultado] = useState("");
   const [salvarSomenteTitulo, setSalvarSomenteTitulo] = useState(false); // 👈 novo estado
@@ -75,9 +81,12 @@ export default function ConversorRoteiros() {
   const [gerandoTodos, setGerandoTodos] = useState(false);
   const audioUrlsRef = useRef<string[]>([]);
 
-  // 🧠 Carregar roteiros do localStorage
+  // 🧠 Carregar roteiros do localStorage (chave do usuário; cai na chave global
+  // antiga só como migração, sem apagá-la).
   useEffect(() => {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data =
+      localStorage.getItem(storageKey) ??
+      localStorage.getItem(LEGACY_STORAGE_KEY);
     if (data) {
       try {
         const parsed: Roteiro[] = JSON.parse(data);
@@ -88,17 +97,17 @@ export default function ConversorRoteiros() {
         console.error("Erro ao carregar roteiros salvos:", error);
       }
     }
-  }, []);
+  }, [storageKey]);
 
   // 💾 Salvar roteiros no localStorage sempre que mudar
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(roteiros));
-  }, [roteiros]);
+    localStorage.setItem(storageKey, JSON.stringify(roteiros));
+  }, [roteiros, storageKey]);
 
   // 🔑 Carregar voz salva e listar vozes automaticamente.
   // Funciona tanto com a chave salva em Configurações quanto com a do servidor (.env).
   useEffect(() => {
-    const savedVoz = lerPreferenciaVoz();
+    const savedVoz = lerPreferenciaVoz(username);
     if (savedVoz && savedVoz !== "undefined") setVozId(savedVoz);
     carregarVozes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,7 +126,7 @@ export default function ConversorRoteiros() {
   const handleVozChange = (value: string) => {
     if (!value) return;
     setVozId(value);
-    salvarPreferenciaVoz(value);
+    salvarPreferenciaVoz(value, username);
   };
 
   async function carregarVozes() {
@@ -129,7 +138,7 @@ export default function ConversorRoteiros() {
       // mantém a voz salva se ainda existir; caso contrário seleciona a primeira
       const preferida = escolherVozPreferida(
         lista.map((item) => item.idApi),
-        lerPreferenciaVoz(),
+        lerPreferenciaVoz(username),
         localStorage.getItem(LEGACY_VOICE_STORAGE_KEY) ?? ""
       );
       if (preferida) handleVozChange(preferida);
@@ -246,7 +255,7 @@ export default function ConversorRoteiros() {
   const handleResetRoteiros = () => {
     setRoteiros([{ titulo: "", texto: "" }]);
     setResultado("");
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(storageKey);
   };
 
   const contarPalavras = (texto: string) =>

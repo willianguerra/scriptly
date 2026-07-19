@@ -36,7 +36,9 @@ consegue fazer login.
   login ("Solicitar cadastro"). O cadastro entra como `PENDING` e não loga até
   ser aprovado.
 - **Aprovação:** um administrador aprova, rejeita ou suspende cadastros no painel
-  `/admin` (visível só para admins).
+  `/admin` (visível só para admins). Suspender ou remover um usuário tem **efeito
+  imediato**: o layout revalida o `status` no banco a cada carregamento, então o
+  acesso cai já na próxima navegação, sem esperar a sessão expirar.
 - **Criar admin pela CLI** (a partir de uma base zerada ou para promover alguém):
 
   ```bash

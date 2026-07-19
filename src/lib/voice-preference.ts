@@ -2,8 +2,17 @@ export const VOICE_COOKIE_NAME = "darkvi_voice";
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
-export function lerVozDoCookie(cookieHeader: string): string {
-  const prefix = `${VOICE_COOKIE_NAME}=`;
+/** Nome de cookie por usuário, para a voz preferida não vazar entre contas num
+ * navegador compartilhado. Sem usuário, usa o nome global (compatibilidade). */
+export function nomeCookieVoz(username?: string): string {
+  return username ? `${VOICE_COOKIE_NAME}__${username}` : VOICE_COOKIE_NAME;
+}
+
+export function lerVozDoCookie(
+  cookieHeader: string,
+  cookieName: string = VOICE_COOKIE_NAME
+): string {
+  const prefix = `${cookieName}=`;
   const cookie = cookieHeader
     .split(";")
     .map((item) => item.trim())
@@ -18,9 +27,13 @@ export function lerVozDoCookie(cookieHeader: string): string {
   }
 }
 
-export function criarCookieVoz(vozId: string, secure = false): string {
+export function criarCookieVoz(
+  vozId: string,
+  secure = false,
+  cookieName: string = VOICE_COOKIE_NAME
+): string {
   const cookie = [
-    `${VOICE_COOKIE_NAME}=${encodeURIComponent(vozId)}`,
+    `${cookieName}=${encodeURIComponent(vozId)}`,
     "Path=/",
     `Max-Age=${ONE_YEAR_IN_SECONDS}`,
     "SameSite=Lax",
@@ -40,13 +53,13 @@ export function escolherVozPreferida(
   return vozesDisponiveis[0] ?? "";
 }
 
-export function lerPreferenciaVoz(): string {
+export function lerPreferenciaVoz(username?: string): string {
   if (typeof document === "undefined") return "";
-  return lerVozDoCookie(document.cookie);
+  return lerVozDoCookie(document.cookie, nomeCookieVoz(username));
 }
 
-export function salvarPreferenciaVoz(vozId: string): void {
+export function salvarPreferenciaVoz(vozId: string, username?: string): void {
   if (typeof document === "undefined" || !vozId) return;
   const secure = window.location.protocol === "https:";
-  document.cookie = criarCookieVoz(vozId, secure);
+  document.cookie = criarCookieVoz(vozId, secure, nomeCookieVoz(username));
 }
