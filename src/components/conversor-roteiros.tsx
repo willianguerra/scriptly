@@ -39,6 +39,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { baixarSRT, baixarZIP } from "@/lib/fileUtils";
 import { converterParaSRT, INTERVALO_ENTRE_ROTEIROS } from "@/lib/srtConverter";
 import {
+  escolherVozPreferida,
+  lerPreferenciaVoz,
+  salvarPreferenciaVoz,
+} from "@/lib/voice-preference";
+import {
   aguardarConclusao,
   baixarAudioBlob,
   criarAudio,
@@ -48,7 +53,7 @@ import type { Roteiro } from "@/types/roteiro";
 import type { DarkviVoice, RoteiroAudio } from "@/types/darkvi";
 
 const STORAGE_KEY = "roteiros-salvos";
-const VOZ_KEY = "darkvi-voz";
+const LEGACY_VOICE_STORAGE_KEY = "darkvi-voz";
 
 const LIMITE_TEXTO = 80000; // limite da API Darkvi
 
@@ -93,7 +98,7 @@ export default function ConversorRoteiros() {
   // 🔑 Carregar voz salva e listar vozes automaticamente.
   // Funciona tanto com a chave salva em Configurações quanto com a do servidor (.env).
   useEffect(() => {
-    const savedVoz = localStorage.getItem(VOZ_KEY) ?? "";
+    const savedVoz = lerPreferenciaVoz();
     if (savedVoz && savedVoz !== "undefined") setVozId(savedVoz);
     carregarVozes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,7 +117,7 @@ export default function ConversorRoteiros() {
   const handleVozChange = (value: string) => {
     if (!value) return;
     setVozId(value);
-    localStorage.setItem(VOZ_KEY, value);
+    salvarPreferenciaVoz(value);
   };
 
   async function carregarVozes() {
@@ -122,13 +127,12 @@ export default function ConversorRoteiros() {
       const lista = await listarVozes();
       setVozes(lista);
       // mantém a voz salva se ainda existir; caso contrário seleciona a primeira
-      const savedVoz = localStorage.getItem(VOZ_KEY) ?? "";
-      const jaValida = lista.some((v) => v.idApi === savedVoz);
-      if (jaValida) {
-        setVozId(savedVoz);
-      } else if (lista.length) {
-        handleVozChange(lista[0].idApi);
-      }
+      const preferida = escolherVozPreferida(
+        lista.map((item) => item.idApi),
+        lerPreferenciaVoz(),
+        localStorage.getItem(LEGACY_VOICE_STORAGE_KEY) ?? ""
+      );
+      if (preferida) handleVozChange(preferida);
     } catch (e) {
       setVozes([]);
       setErroVozes(e instanceof Error ? e.message : "Falha ao listar vozes.");
