@@ -8,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function DivisorAudioPage() {
-  return (
-    <div className="mx-auto w-full max-w-5xl p-4 md:p-6">
-      <AudioSplitter />
-    </div>
-  );
+  return <AudioSplitter />;
 }

@@ -132,7 +132,7 @@ export default function UpscaleImage() {
   }
 
   return (
-    <section className="space-y-5">
+    <section className="mx-auto w-full max-w-5xl space-y-5">
       <PageHeader
         icon={ImageUp}
         title="Thumbnail para YouTube"

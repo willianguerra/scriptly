@@ -15,7 +15,13 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { audioBufferToMono16k } from "@/lib/audioUtils";
+import {
+  MAX_SEGMENT_SECONDS,
+  MIN_SEGMENT_SECONDS,
+  SEGMENT_SECONDS,
+  audioBufferToMono16k,
+  sliceAudioBuffer,
+} from "@/lib/audioUtils";
 import {
   aguardarConclusao,
   baixarAudioBlob,
@@ -24,7 +30,6 @@ import {
 } from "@/lib/darkvi";
 import { listarPrompts } from "@/lib/prompt-api";
 import {
-  agruparPalavras,
   montarTimings,
   obterAudioGeradoParaSincronizacao,
   segmentosParaTexto,
@@ -34,7 +39,7 @@ import {
 } from "@/lib/roteiro/sync";
 import type { ProviderRoteiro } from "@/lib/roteiro/types";
 import { gerarRoteiro } from "@/lib/roteiro-client";
-import { transcribeSamplesWithTimestamps } from "@/lib/whisper-browser";
+import { transcribeSamples } from "@/lib/whisper-browser";
 import type { DarkviVoice } from "@/types/darkvi";
 import type { PromptSalvo } from "@/types/prompt";
 
@@ -62,17 +67,13 @@ function baixarBlob(blob: Blob | null, nome: string) {
   URL.revokeObjectURL(url);
 }
 
-async function decodificarBlob(blob: Blob): Promise<AudioBuffer> {
-  const AudioCtx =
-    window.AudioContext ||
-    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-  const ctx = new AudioCtx();
-  try {
-    const arr = await blob.arrayBuffer();
-    return await ctx.decodeAudioData(arr.slice(0));
-  } finally {
-    ctx.close().catch(() => {});
-  }
+/** Mantém o tamanho do bloco dentro dos limites suportados. */
+function normalizarSegundos(valor: number): number {
+  if (!Number.isFinite(valor) || valor <= 0) return SEGMENT_SECONDS;
+  return Math.min(
+    MAX_SEGMENT_SECONDS,
+    Math.max(MIN_SEGMENT_SECONDS, Math.round(valor))
+  );
 }
 
 export function Estudio() {
@@ -93,6 +94,10 @@ export function Estudio() {
 
   const [sincronizando, setSincronizando] = React.useState(false);
   const [modelPct, setModelPct] = React.useState(0);
+  const [modelPronto, setModelPronto] = React.useState(false);
+  const [segundosPorBloco, setSegundosPorBloco] = React.useState(SEGMENT_SECONDS);
+  const [blocosTranscritos, setBlocosTranscritos] = React.useState(0);
+  const [totalBlocos, setTotalBlocos] = React.useState(0);
   const [segmentos, setSegmentos] = React.useState<Segmento[]>([]);
   const [timings, setTimings] = React.useState<Timings | null>(null);
   const [erro, setErro] = React.useState<string | null>(null);
@@ -209,30 +214,63 @@ export function Estudio() {
       setErro(error instanceof Error ? error.message : "Áudio gerado indisponível.");
       return;
     }
+
+    const segundos = normalizarSegundos(segundosPorBloco);
+    setSegundosPorBloco(segundos);
+
     setErro(null);
     setSincronizando(true);
     setModelPct(0);
+    setModelPronto(false);
+    setBlocosTranscritos(0);
+    setTotalBlocos(0);
     setSegmentos([]);
     setTimings(null);
+
+    let ctx: AudioContext | null = null;
     try {
-      const buffer = await decodificarBlob(blob);
-      const samples = await audioBufferToMono16k(buffer);
-      const { palavras } = await transcribeSamplesWithTimestamps(samples, {
-        language: "portuguese",
-        duracaoSegundos: buffer.duration,
-        onModelProgress: setModelPct,
-      });
-      if (palavras.length === 0) {
-        throw new Error(
-          "A transcrição não retornou palavras com tempo. Tente um áudio com fala mais clara."
-        );
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      ctx = new AudioCtx();
+
+      const arr = await blob.arrayBuffer();
+      const buffer = await ctx.decodeAudioData(arr.slice(0));
+
+      // Fatia a narração em blocos fixos e transcreve cada um — o mesmo caminho
+      // confiável do Divisor de Áudio, para o resultado sair no mesmo padrão.
+      const brutos = sliceAudioBuffer(buffer, segundos, ctx);
+      if (brutos.length === 0) {
+        throw new Error("Não foi possível dividir o áudio gerado em blocos.");
       }
-      const novosSegmentos = agruparPalavras(palavras);
-      setSegmentos(novosSegmentos);
+      setTotalBlocos(brutos.length);
+
+      const novosSegmentos: Segmento[] = [];
+      let concluidos = 0;
+      for (const bruto of brutos) {
+        const samples = await audioBufferToMono16k(bruto.buffer);
+        const texto = await transcribeSamples(samples, {
+          language: "portuguese",
+          onModelProgress: (pct) => {
+            setModelPct(pct);
+            if (pct >= 100) setModelPronto(true);
+          },
+        });
+        setModelPronto(true);
+
+        novosSegmentos.push({ texto, inicio: bruto.start, fim: bruto.end });
+        concluidos += 1;
+        setBlocosTranscritos(concluidos);
+        // Exibe os blocos conforme são transcritos, como no Divisor de Áudio.
+        setSegmentos([...novosSegmentos]);
+      }
+
       setTimings(montarTimings(novosSegmentos, buffer.duration));
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Falha ao sincronizar.");
     } finally {
+      ctx?.close().catch(() => {});
       setSincronizando(false);
     }
   }
@@ -263,6 +301,13 @@ export function Estudio() {
       : !temSincronizacao
         ? "Sincronize a narração para criar os arquivos finais."
         : "Projeto pronto para baixar e usar na edição.";
+  const proximaAcaoHref = !temRoteiro
+    ? "#etapa-roteiro"
+    : !temAudio
+      ? "#etapa-narracao"
+      : !temSincronizacao
+        ? "#etapa-sincronizacao"
+        : null;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -343,6 +388,11 @@ export function Estudio() {
             concluida={temSincronizacao}
             sincronizando={sincronizando}
             modelPct={modelPct}
+            modelPronto={modelPronto}
+            segundosPorBloco={segundosPorBloco}
+            blocosTranscritos={blocosTranscritos}
+            totalBlocos={totalBlocos}
+            onSegundosChange={setSegundosPorBloco}
             segmentos={segmentos}
             timings={timings}
             audioUrl={audioUrl}
@@ -381,6 +431,7 @@ export function Estudio() {
           temAudio={temAudio}
           temSincronizacao={temSincronizacao}
           proximaAcao={proximaAcao}
+          proximaAcaoHref={proximaAcaoHref}
           palavras={palavrasRoteiro}
           minutosEstimados={minutosEstimados}
         />

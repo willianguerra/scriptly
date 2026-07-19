@@ -394,7 +394,7 @@ export function AudioSplitter() {
   const errorCount = segments.filter((segment) => segment.status === "error").length;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="mx-auto w-full max-w-5xl space-y-6">
       <PageHeader
         icon={AudioLines}
         title="Divisor de Áudio"

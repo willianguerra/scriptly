@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import {
   AlertCircle,
+  ArrowRight,
   AudioLines,
   Captions,
   Check,
@@ -44,7 +45,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 import type { ProviderRoteiro } from "@/lib/roteiro/types";
 import type { Timings, Segmento } from "@/lib/roteiro/sync";
-import { formatTime } from "@/lib/audioUtils";
+import {
+  MAX_SEGMENT_SECONDS,
+  MIN_SEGMENT_SECONDS,
+  formatTime,
+} from "@/lib/audioUtils";
 import type { DarkviVoice } from "@/types/darkvi";
 import type { PromptSalvo } from "@/types/prompt";
 
@@ -76,35 +81,37 @@ function EtapaCabecalho({
   status: EtapaStatus;
 }) {
   return (
-    <CardHeader className="gap-3 border-b pb-5 sm:grid-cols-[auto_1fr_auto]">
-      <span
-        className={`grid size-9 place-items-center rounded-lg ${
-          status === "concluida"
-            ? "bg-primary text-primary-foreground"
-            : "bg-primary/10 text-primary"
-        }`}
-        aria-hidden="true"
-      >
-        {status === "concluida" ? (
-          <CheckCircle2 className="size-5" />
-        ) : (
-          <Icon className="size-5" />
-        )}
-      </span>
-      <div className="min-w-0 space-y-1">
-        <CardTitle>
-          <h2 className="text-base leading-6 sm:text-lg">
-            <span className="text-muted-foreground">{numero}.</span> {titulo}
-          </h2>
-        </CardTitle>
-        <CardDescription className="leading-relaxed">{descricao}</CardDescription>
+    <CardHeader className="border-b pb-5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span
+          className={`grid size-9 shrink-0 place-items-center rounded-lg ${
+            status === "concluida"
+              ? "bg-primary text-primary-foreground"
+              : "bg-primary/10 text-primary"
+          }`}
+          aria-hidden="true"
+        >
+          {status === "concluida" ? (
+            <CheckCircle2 className="size-5" />
+          ) : (
+            <Icon className="size-5" />
+          )}
+        </span>
+        <div className="min-w-0 flex-1 space-y-1">
+          <CardTitle>
+            <h2 className="text-base leading-6 sm:text-lg">
+              <span className="text-muted-foreground">{numero}.</span> {titulo}
+            </h2>
+          </CardTitle>
+          <CardDescription className="leading-relaxed">{descricao}</CardDescription>
+        </div>
+        <Badge
+          variant={status === "atual" ? "default" : "secondary"}
+          className="shrink-0"
+        >
+          {STATUS_LABEL[status]}
+        </Badge>
       </div>
-      <Badge
-        variant={status === "atual" ? "default" : "secondary"}
-        className="w-fit sm:justify-self-end"
-      >
-        {STATUS_LABEL[status]}
-      </Badge>
     </CardHeader>
   );
 }
@@ -300,7 +307,7 @@ export function RoteiroEtapa({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button
             onClick={onGerar}
-            disabled={gerando}
+            disabled={gerando || !tema.trim()}
             className="w-full sm:w-auto"
             aria-busy={gerando}
           >
@@ -463,6 +470,11 @@ type SincronizacaoEtapaProps = {
   concluida: boolean;
   sincronizando: boolean;
   modelPct: number;
+  modelPronto: boolean;
+  segundosPorBloco: number;
+  blocosTranscritos: number;
+  totalBlocos: number;
+  onSegundosChange: (value: number) => void;
   segmentos: Segmento[];
   timings: Timings | null;
   audioUrl: string | null;
@@ -479,6 +491,11 @@ export function SincronizacaoEtapa({
   concluida,
   sincronizando,
   modelPct,
+  modelPronto,
+  segundosPorBloco,
+  blocosTranscritos,
+  totalBlocos,
+  onSegundosChange,
   segmentos,
   timings,
   audioUrl,
@@ -488,6 +505,8 @@ export function SincronizacaoEtapa({
   onBaixarSrt,
   onBaixarTimings,
 }: SincronizacaoEtapaProps) {
+  const progressoBlocos =
+    totalBlocos > 0 ? Math.round((blocosTranscritos / totalBlocos) * 100) : 0;
   const [copiado, setCopiado] = React.useState(false);
   const [erroCopia, setErroCopia] = React.useState<string | null>(null);
 
@@ -541,6 +560,25 @@ export function SincronizacaoEtapa({
           </div>
         )}
 
+        {temAudio && (
+          <div className="grid max-w-[10rem] gap-1.5">
+            <Label htmlFor="segundos-bloco">Segundos por bloco</Label>
+            <Input
+              id="segundos-bloco"
+              type="number"
+              inputMode="numeric"
+              min={MIN_SEGMENT_SECONDS}
+              max={MAX_SEGMENT_SECONDS}
+              value={segundosPorBloco}
+              onChange={(event) => {
+                const raw = Number(event.target.value);
+                if (Number.isFinite(raw)) onSegundosChange(raw);
+              }}
+              disabled={sincronizando}
+            />
+          </div>
+        )}
+
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Button
             onClick={onSincronizar}
@@ -561,23 +599,32 @@ export function SincronizacaoEtapa({
           </span>
         </div>
 
-        {sincronizando && (
+        {sincronizando && !modelPronto && modelPct > 0 && modelPct < 100 && (
+          <div className="space-y-2 rounded-lg border bg-muted/20 p-4" role="status" aria-live="polite">
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-medium">Baixando modelo de transcrição (apenas na 1ª vez)</span>
+              <span className="tabular-nums text-muted-foreground">{modelPct}%</span>
+            </div>
+            <Progress value={modelPct} aria-label="Progresso do download do modelo" />
+          </div>
+        )}
+
+        {sincronizando && (modelPronto || modelPct >= 100 || modelPct === 0) && (
           <div className="space-y-2 rounded-lg border bg-muted/20 p-4" role="status" aria-live="polite">
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="font-medium">
-                {modelPct > 0 && modelPct < 100 ? "Preparando transcrição" : "Alinhando roteiro e narração"}
+                {totalBlocos > 0
+                  ? `Transcrevendo blocos (${blocosTranscritos}/${totalBlocos})`
+                  : "Dividindo a narração em blocos"}
               </span>
-              {modelPct > 0 && modelPct < 100 && (
-                <span className="tabular-nums text-muted-foreground">{modelPct}%</span>
+              {totalBlocos > 0 && (
+                <span className="tabular-nums text-muted-foreground">{progressoBlocos}%</span>
               )}
             </div>
             <Progress
-              value={modelPct > 0 ? modelPct : undefined}
+              value={totalBlocos > 0 ? progressoBlocos : undefined}
               aria-label="Progresso da sincronização"
             />
-            <p className="text-xs text-muted-foreground">
-              Na primeira execução, o modelo de transcrição precisa ser baixado.
-            </p>
           </div>
         )}
 
@@ -650,6 +697,7 @@ export function ResumoProjeto({
   temAudio,
   temSincronizacao,
   proximaAcao,
+  proximaAcaoHref,
   palavras,
   minutosEstimados,
 }: {
@@ -658,6 +706,7 @@ export function ResumoProjeto({
   temAudio: boolean;
   temSincronizacao: boolean;
   proximaAcao: string;
+  proximaAcaoHref: string | null;
   palavras: number;
   minutosEstimados: number;
 }) {
@@ -696,10 +745,26 @@ export function ResumoProjeto({
             ))}
           </ol>
 
-          <div className="rounded-lg bg-muted/50 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Próxima ação</p>
-            <p className="mt-1.5 text-sm leading-relaxed">{proximaAcao}</p>
-          </div>
+          {proximaAcaoHref ? (
+            <a
+              href={proximaAcaoHref}
+              className="group block rounded-lg border border-primary/20 bg-primary/5 p-3 transition-colors hover:border-primary/40 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Próxima ação</p>
+              <p className="mt-1.5 flex items-start gap-1.5 text-sm font-medium leading-relaxed text-foreground">
+                <span className="flex-1">{proximaAcao}</span>
+                <ArrowRight className="mt-0.5 size-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
+              </p>
+            </a>
+          ) : (
+            <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tudo pronto</p>
+                <p className="mt-1.5 text-sm leading-relaxed">{proximaAcao}</p>
+              </div>
+            </div>
+          )}
 
           {temRoteiro && (
             <dl className="grid grid-cols-2 gap-3 border-t pt-4 text-sm">

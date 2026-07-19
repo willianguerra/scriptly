@@ -54,7 +54,7 @@ export default function LinkInscricao() {
   }
 
   return (
-    <section className="space-y-5">
+    <section className="mx-auto w-full max-w-5xl space-y-5">
       <PageHeader
         icon={Link2}
         title="Gerador de Link de Inscricao"

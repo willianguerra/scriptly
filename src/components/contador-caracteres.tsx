@@ -43,7 +43,7 @@ export default function ContadorCaracteres() {
   }
 
   return (
-    <section className="space-y-5">
+    <section className="mx-auto w-full max-w-5xl space-y-5">
       <PageHeader
         icon={Type}
         title="Contador de Caracteres e Palavras"

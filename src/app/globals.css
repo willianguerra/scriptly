@@ -126,6 +126,13 @@
       radial-gradient(50rem 50rem at -10% 110%, color-mix(in oklab, var(--primary) 8%, transparent), transparent 60%);
     background-attachment: fixed;
   }
+  /* Rolagem suave ao navegar por âncoras (ex.: etapas do Estúdio),
+     desativada para quem prefere menos movimento. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
 }
 
 /* Refined scrollbars to match the theme */
