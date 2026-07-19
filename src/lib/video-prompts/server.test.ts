@@ -22,9 +22,14 @@ test("o provider fake permite percorrer a análise sem chave", async () => {
   assert.equal(resultado.provider, "fake");
 });
 
-test("a OpenAI recebe o agente, o contexto fixo e a instrução da etapa", async () => {
+test("a análise usa o modelo OpenAI potente e recebe o contexto completo", async () => {
   const fetchOriginal = globalThis.fetch;
-  let bodyRecebido: { messages?: Array<{ role: string; content: string }> } = {};
+  let bodyRecebido: {
+    model?: string;
+    max_completion_tokens?: number;
+    max_tokens?: number;
+    messages?: Array<{ role: string; content: string }>;
+  } = {};
 
   globalThis.fetch = async (_input, init) => {
     bodyRecebido = JSON.parse(String(init?.body));
@@ -45,9 +50,79 @@ test("a OpenAI recebe o agente, o contexto fixo e a instrução da etapa", async
     });
 
     const mensagens = bodyRecebido?.messages as Array<{ role: string; content: string }>;
+    assert.equal(bodyRecebido.model, "gpt-5.4");
+    assert.equal(bodyRecebido.max_completion_tokens, 65536);
+    assert.equal(bodyRecebido.max_tokens, undefined);
     assert.match(mensagens[0].content, /DOTTI AGENT 2\.0/);
     assert.match(mensagens[0].content, /ROTEIRO FIXO DO PROJETO/);
     assert.match(mensagens.at(-1)?.content ?? "", /Execute somente a ETAPA 1/);
+  } finally {
+    globalThis.fetch = fetchOriginal;
+  }
+});
+
+test("a geração de cenas usa o modelo OpenAI econômico", async () => {
+  const fetchOriginal = globalThis.fetch;
+  let modeloRecebido = "";
+
+  globalThis.fetch = async (_input, init) => {
+    modeloRecebido = JSON.parse(String(init?.body)).model;
+    return new Response(
+      JSON.stringify({
+        choices: [{ message: { content: "PROMPT 001" }, finish_reason: "stop" }],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  };
+
+  try {
+    const resultado = await gerarRespostaDoAgente({
+      ...entradaBase,
+      provider: "openai",
+      etapa: "cenas",
+      chave: "chave-teste",
+    });
+
+    assert.equal(modeloRecebido, "gpt-5-mini");
+    assert.equal(resultado.modelo, "gpt-5-mini");
+  } finally {
+    globalThis.fetch = fetchOriginal;
+  }
+});
+
+test("o Gemini alterna entre potente na análise e lite nas cenas", async () => {
+  const fetchOriginal = globalThis.fetch;
+  const urls: string[] = [];
+  const limites: number[] = [];
+
+  globalThis.fetch = async (input, init) => {
+    urls.push(String(input));
+    limites.push(JSON.parse(String(init?.body)).generationConfig.maxOutputTokens);
+    return new Response(
+      JSON.stringify({
+        candidates: [{ content: { parts: [{ text: "Resposta pronta" }] }, finishReason: "STOP" }],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  };
+
+  try {
+    await gerarRespostaDoAgente({
+      ...entradaBase,
+      provider: "gemini",
+      etapa: "analise",
+      chave: "chave-teste",
+    });
+    await gerarRespostaDoAgente({
+      ...entradaBase,
+      provider: "gemini",
+      etapa: "cenas",
+      chave: "chave-teste",
+    });
+
+    assert.match(urls[0], /gemini-3\.5-flash:generateContent$/);
+    assert.match(urls[1], /gemini-3\.1-flash-lite:generateContent$/);
+    assert.deepEqual(limites, [65536, 65536]);
   } finally {
     globalThis.fetch = fetchOriginal;
   }

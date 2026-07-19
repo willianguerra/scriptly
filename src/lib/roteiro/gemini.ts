@@ -9,12 +9,13 @@ import {
   type ResultadoRoteiro,
   type ScriptProvider,
 } from "./types.ts";
+import { GEMINI_MODELO_ECONOMICO } from "../ai-models.ts";
 
 const GEMINI_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
 
 /** Modelo padrão quando o canal não especifica. */
-export const GEMINI_MODELO_PADRAO = "gemini-3.5-flash";
+export const GEMINI_MODELO_PADRAO = GEMINI_MODELO_ECONOMICO;
 
 type GeminiResposta = {
   candidates?: Array<{

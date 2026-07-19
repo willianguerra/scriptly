@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { GeminiScriptProvider } from "./gemini.ts";
 
-test("usa o Gemini 3.5 Flash estável como modelo padrão", async () => {
+test("usa o Gemini 3.1 Flash-Lite como modelo econômico padrão", async () => {
   const fetchOriginal = globalThis.fetch;
   let urlRecebida = "";
 
@@ -24,9 +24,9 @@ test("usa o Gemini 3.5 Flash estável como modelo padrão", async () => {
 
     assert.equal(
       new URL(urlRecebida).pathname,
-      "/v1beta/models/gemini-3.5-flash:generateContent"
+      "/v1beta/models/gemini-3.1-flash-lite:generateContent"
     );
-    assert.equal(resultado.modelo, "gemini-3.5-flash");
+    assert.equal(resultado.modelo, "gemini-3.1-flash-lite");
   } finally {
     globalThis.fetch = fetchOriginal;
   }
