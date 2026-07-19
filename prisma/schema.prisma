@@ -12,14 +12,35 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+/// Papel do usuário na plataforma. ADMIN aprova cadastros e vê o painel /admin.
+enum Role {
+  ADMIN
+  USER
+}
+
+/// Situação do cadastro. Só APPROVED consegue fazer login.
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
 model User {
   id           String          @id @default(cuid())
   username     String          @unique
+  email        String?         @unique
   passwordHash String
+  role         Role            @default(USER)
+  status       Status          @default(PENDING)
+  approvedAt   DateTime?
+  approvedBy   String?
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   prompts      Prompt[]
   credentials  ApiCredential[]
+
+  @@index([status])
 }
 
 /// Biblioteca de prompts de roteiro, por usuário.

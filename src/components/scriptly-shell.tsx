@@ -16,8 +16,10 @@ import {
   Menu,
   ChevronRight,
   Settings,
+  ShieldCheck,
   LogOut,
 } from "lucide-react";
+import type { SessionRole } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
@@ -33,6 +35,7 @@ import {
 type ScriptlyShellProps = {
   children: React.ReactNode;
   username: string;
+  role: SessionRole;
 };
 
 type ToolItem = {
@@ -61,6 +64,12 @@ const settingsItem: ToolItem = {
   icon: Settings,
 };
 
+const adminItem: ToolItem = {
+  href: "/admin",
+  label: "Administração",
+  icon: ShieldCheck,
+};
+
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
@@ -72,7 +81,13 @@ function Brand() {
   );
 }
 
-function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarNav({
+  onNavigate,
+  isAdmin,
+}: {
+  onNavigate?: () => void;
+  isAdmin: boolean;
+}) {
   const pathname = usePathname();
   return (
     <>
@@ -108,7 +123,14 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         </>
       ) : null}
 
-      <div className="mt-6 border-t border-sidebar-border pt-4">
+      <div className="mt-6 space-y-1 border-t border-sidebar-border pt-4">
+        {isAdmin ? (
+          <SidebarLink
+            {...adminItem}
+            active={pathname === adminItem.href}
+            onNavigate={onNavigate}
+          />
+        ) : null}
         <SidebarLink
           {...settingsItem}
           active={pathname === settingsItem.href}
@@ -119,11 +141,12 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export default function ScriptlyShell({ children, username }: ScriptlyShellProps) {
+export default function ScriptlyShell({ children, username, role }: ScriptlyShellProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const pathname = usePathname();
-  const activeTool = [...mainTools, ...secondaryTools, settingsItem].find(
+  const isAdmin = role === "ADMIN";
+  const activeTool = [...mainTools, ...secondaryTools, settingsItem, adminItem].find(
     (item) => item.href === pathname
   );
 
@@ -149,7 +172,7 @@ export default function ScriptlyShell({ children, username }: ScriptlyShellProps
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-4">
-            <SidebarNav />
+            <SidebarNav isAdmin={isAdmin} />
           </div>
 
           <div className="border-t border-sidebar-border p-3">
@@ -204,7 +227,10 @@ export default function ScriptlyShell({ children, username }: ScriptlyShellProps
                     <SheetDescription>Acesse as ferramentas disponiveis</SheetDescription>
                   </SheetHeader>
                   <div className="overflow-y-auto px-3 py-4">
-                    <SidebarNav onNavigate={() => setMobileOpen(false)} />
+                    <SidebarNav
+                      isAdmin={isAdmin}
+                      onNavigate={() => setMobileOpen(false)}
+                    />
                   </div>
                 </SheetContent>
               </Sheet>

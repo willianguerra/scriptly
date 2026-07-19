@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { DARKVI_BASE_URL, missingTokenResponse, resolveToken } from "@/lib/darkvi-server";
+import { DARKVI_BASE_URL, missingTokenResponse, resolverTokenDarkvi } from "@/lib/darkvi-server";
 
 // GET /api/darkvi/tts/:id -> proxy para GET https://darkvi.com/api/tts/:id (status)
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const token = resolveToken(req);
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const token = await resolverTokenDarkvi();
   if (!token) return missingTokenResponse();
 
   const { id } = await params;

@@ -21,12 +21,13 @@ test("malformed password hashes are rejected", async () => {
 test("signed sessions accept valid tokens and reject tampering or expiration", async () => {
   const secret = "s".repeat(32);
   const token = await createSessionToken(
-    { username: "admin", expiresAt: 2_000 },
+    { username: "admin", role: "ADMIN", expiresAt: 2_000 },
     secret
   );
 
   assert.deepEqual(await verifySessionToken(token, secret, 1_000), {
     username: "admin",
+    role: "ADMIN",
     expiresAt: 2_000,
   });
   assert.equal(await verifySessionToken(`${token}x`, secret, 1_000), null);

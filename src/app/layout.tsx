@@ -105,7 +105,9 @@ export default async function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {session ? (
-            <AppShell username={session.username}>{children}</AppShell>
+            <AppShell username={session.username} role={session.role}>
+              {children}
+            </AppShell>
           ) : (
             <LoginScreen />
           )}

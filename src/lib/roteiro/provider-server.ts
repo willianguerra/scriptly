@@ -1,26 +1,13 @@
-// Fábrica de ScriptProvider (server-side) + resolução de chave.
+// Fábrica de ScriptProvider (server-side).
 //
-// Segue o mesmo padrão da Darkvi (ver darkvi-server.ts): a chave enviada pelo
-// cliente (guardada no localStorage e mandada por header) tem prioridade sobre
-// a chave do servidor (variável de ambiente). Assim o provider vira o único
-// ponto que sabe "de onde vem a chave" e "qual classe instanciar".
+// A resolução da chave (chave própria do usuário no banco, com fallback de env
+// só para admin) vive em @/lib/credentials/store. Aqui ficam apenas a validação
+// do provider, o modelo padrão e a instanciação da classe concreta.
 
 import { FakeScriptProvider } from "./fake.ts";
 import { GeminiScriptProvider, GEMINI_MODELO_PADRAO } from "./gemini.ts";
 import { OpenAIScriptProvider, OPENAI_MODELO_PADRAO } from "./openai.ts";
 import type { ProviderRoteiro, ScriptProvider } from "./types.ts";
-
-/** Header que o cliente usa para enviar a chave de cada provider. */
-const HEADER_CHAVE: Record<Exclude<ProviderRoteiro, "fake">, string> = {
-  gemini: "x-gemini-key",
-  openai: "x-openai-key",
-};
-
-/** Variável de ambiente (fallback do servidor) de cada provider. */
-const ENV_CHAVE: Record<Exclude<ProviderRoteiro, "fake">, string> = {
-  gemini: "GEMINI_API_KEY",
-  openai: "OPENAI_API_KEY",
-};
 
 /** Modelo padrão de cada provider quando nenhum é informado. */
 const MODELO_PADRAO: Record<ProviderRoteiro, string> = {
@@ -32,23 +19,6 @@ const MODELO_PADRAO: Record<ProviderRoteiro, string> = {
 /** Valida se a string é um provider conhecido. */
 export function ehProviderValido(valor: unknown): valor is ProviderRoteiro {
   return valor === "fake" || valor === "gemini" || valor === "openai";
-}
-
-/**
- * Resolve a chave de um provider: header do cliente vence a env do servidor.
- * `fake` nunca precisa de chave. Retorna `null` quando não há chave disponível.
- */
-export function resolverChave(
-  provider: ProviderRoteiro,
-  req: Request
-): string | null {
-  if (provider === "fake") return "";
-
-  const doHeader = req.headers.get(HEADER_CHAVE[provider])?.trim();
-  if (doHeader) return doHeader;
-
-  const daEnv = process.env[ENV_CHAVE[provider]]?.trim();
-  return daEnv || null;
 }
 
 /**

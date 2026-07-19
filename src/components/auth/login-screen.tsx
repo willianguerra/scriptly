@@ -1,7 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Eye, EyeOff, LoaderCircle, LockKeyhole, ShieldCheck } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  LockKeyhole,
+  ShieldCheck,
+  UserPlus,
+  MailCheck,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
 
+type Mode = "login" | "register";
+
 function destinationAfterLogin(): string {
   const requestedPath = new URLSearchParams(window.location.search).get("from");
   if (!requestedPath?.startsWith("/") || requestedPath.startsWith("//")) {
@@ -23,18 +33,53 @@ function destinationAfterLogin(): string {
 }
 
 export function LoginScreen() {
+  const [mode, setMode] = React.useState<Mode>("login");
   const [username, setUsername] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const isRegister = mode === "register";
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError(null);
+    setSuccess(null);
+    setPassword("");
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setSuccess(null);
     setIsSubmitting(true);
 
     try {
+      if (isRegister) {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email: email || undefined, password }),
+        });
+        const body = (await response.json().catch(() => null)) as
+          | { error?: string; message?: string }
+          | null;
+
+        if (!response.ok) {
+          setError(body?.error ?? "Não foi possível concluir o cadastro.");
+          return;
+        }
+        setSuccess(
+          body?.message ??
+            "Cadastro enviado! Aguarde a aprovação do administrador."
+        );
+        setPassword("");
+        return;
+      }
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,10 +122,12 @@ export function LoginScreen() {
         <Card>
           <CardHeader className="space-y-2 text-center">
             <h1 className="font-semibold leading-none tracking-tight">
-              Acesse sua conta
+              {isRegister ? "Solicitar acesso" : "Acesse sua conta"}
             </h1>
             <CardDescription>
-              Informe seu usuário e senha para acessar as ferramentas.
+              {isRegister
+                ? "Crie seu cadastro. Um administrador precisa aprovar antes do primeiro acesso."
+                : "Informe seu usuário e senha para acessar as ferramentas."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -101,6 +148,22 @@ export function LoginScreen() {
                 />
               </div>
 
+              {isRegister ? (
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mail (opcional)</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    maxLength={200}
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              ) : null}
+
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
@@ -108,7 +171,7 @@ export function LoginScreen() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
+                    autoComplete={isRegister ? "new-password" : "current-password"}
                     maxLength={200}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
@@ -131,6 +194,11 @@ export function LoginScreen() {
                     )}
                   </button>
                 </div>
+                {isRegister ? (
+                  <p className="text-xs text-muted-foreground">
+                    Mínimo de 8 caracteres.
+                  </p>
+                ) : null}
               </div>
 
               {error ? (
@@ -142,15 +210,55 @@ export function LoginScreen() {
                 </p>
               ) : null}
 
+              {success ? (
+                <p
+                  className="flex items-start gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm text-foreground"
+                  role="status"
+                >
+                  <MailCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  {success}
+                </p>
+              ) : null}
+
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : isRegister ? (
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
                 ) : (
                   <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 )}
-                {isSubmitting ? "Entrando..." : "Entrar"}
+                {isSubmitting
+                  ? isRegister
+                    ? "Enviando..."
+                    : "Entrando..."
+                  : isRegister
+                  ? "Solicitar acesso"
+                  : "Entrar"}
               </Button>
             </form>
+
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {isRegister ? (
+                <button
+                  type="button"
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
+                  onClick={() => switchMode("login")}
+                  disabled={isSubmitting}
+                >
+                  Já tem conta? Entrar
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
+                  onClick={() => switchMode("register")}
+                  disabled={isSubmitting}
+                >
+                  Não tem acesso? Solicitar cadastro
+                </button>
+              )}
+            </div>
           </CardContent>
         </Card>
 

@@ -1,19 +1,22 @@
 // Helpers server-side para conversar com a API Darkvi.
-// O token vem do header Authorization enviado pelo cliente
-// (guardado no localStorage do navegador) ou, em fallback,
-// da variável de ambiente DARKVI_API_TOKEN.
+//
+// O token agora é resolvido por usuário: a chave própria do usuário (guardada
+// criptografada no banco) e, só para admins, o fallback da env DARKVI_API_TOKEN.
+// Ver @/lib/credentials/store (resolverChaveDoUsuario).
+
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { resolverChaveDoUsuario } from "@/lib/credentials/store";
 
 export const DARKVI_BASE_URL = "https://darkvi.com/api";
 
-export function resolveToken(req: Request): string | null {
-  // Prioridade: chave enviada pelo cliente (salva nas Configurações do navegador)
-  // vence a chave do servidor (variável de ambiente DARKVI_API_TOKEN).
-  const auth = req.headers.get("authorization");
-  const fromHeader = auth?.replace(/^Bearer\s+/i, "").trim();
-  if (fromHeader) return fromHeader;
-
-  const envToken = process.env.DARKVI_API_TOKEN;
-  return envToken?.trim() || null;
+/**
+ * Resolve o token da Darkvi para o usuário logado (chave própria no banco;
+ * fallback de env só para admin). Retorna null se não houver sessão ou chave.
+ */
+export async function resolverTokenDarkvi(): Promise<string | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  return resolverChaveDoUsuario("darkvi", user);
 }
 
 export function missingTokenResponse() {
@@ -22,7 +25,8 @@ export function missingTokenResponse() {
       ok: false,
       error: true,
       code: "AUTH_MISSING_TOKEN",
-      message: "Token da Darkvi não informado. Cole sua API key em darkvi.com/settings.",
+      message:
+        "Chave da Darkvi não configurada. Adicione sua chave em Configurações.",
     },
     { status: 401 }
   );
