@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { obterCanal } from "@/lib/channels/client";
 import type { CanalSalvo } from "@/types/channel";
 import { cn } from "@/lib/utils";
+import { VideosAba } from "@/components/canais/videos-aba";
 
 type Aba = "dados" | "videos" | "calendario";
 
@@ -119,7 +120,7 @@ export function CanalDetalhe({ id }: { id: string }) {
       </div>
 
       {aba === "dados" && <AbaDados canal={canal} />}
-      {aba === "videos" && <PlaceholderAba texto="Os vídeos deste canal aparecerão aqui (Fase 2)." />}
+      {aba === "videos" && <VideosAba channelId={canal.id} />}
       {aba === "calendario" && (
         <PlaceholderAba texto="A agenda dos vídeos aparecerá aqui (Fase 6)." />
       )}

@@ -57,8 +57,32 @@ model Channel {
   promptSistemaPadrao String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  videos              Video[]
 
   @@index([userId])
+}
+
+/// Vídeo de um canal. Guarda os artefatos do Estúdio como texto (o áudio da
+/// narração não é persistido — é regenerado sob demanda a partir do roteiro).
+model Video {
+  id            String    @id @default(cuid())
+  channelId     String
+  channel       Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  titulo        String
+  tema          String?
+  scheduledAt   DateTime?
+  promptSistema String?
+  provider      String?
+  roteiro       String?
+  voz           String?
+  segmentos     Json?
+  timings       Json?
+  srt           String?
+  notas         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([channelId])
 }
 
 /// Biblioteca de prompts de roteiro, por usuário.

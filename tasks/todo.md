@@ -18,26 +18,24 @@ Cada tarefa tem **Aceite** (o que prova que ficou pronta) e **Verificação** (c
   Calendário (placeholders) (`src/components/canais/canal-detalhe.tsx`).
 - [x] **1.6 Navegação nova (shell)** — "Canais" como âncora; auxiliares em "Ferramentas";
   `/estudio` fora da nav.
-- [~] **CP-A — checkpoint:** compila limpo (tsc/eslint), API protegida. **Falta o dono
-  validar o fluxo autenticado no navegador** (não tenho credenciais de login).
+- [x] **CP-A — checkpoint VALIDADO:** logado como admin, criado canal "Ciência em 5
+  minutos" (persistiu no banco, id real), aberto o canal com abas Dados/Vídeos/Calendário,
+  navegação canal-cêntrica correta (Gerenciador + Ferramentas + Administração). Sem erros
+  de console. Rebaseado sobre origin/main e publicado em `feat/gerenciador-canais`.
 
 ## Fase 2 — Vídeos: CRUD dentro do canal
 
-- [ ] **2.1 Schema `Video`** (todos os campos de artefato já) + `prisma db push`.
-  - **Aceite:** tabela `Video` com colunas `roteiro/segmentos/timings/srt/scheduledAt`.
-- [ ] **2.2 API vídeos**
-  - `/api/channels/[id]/videos` (GET/POST) e `/api/videos/[id]` (GET/PATCH/DELETE),
-    escopo `where { channel: { userId } }`.
-  - **Aceite:** criar vídeo num canal; GET lista só vídeos daquele canal/usuário.
-- [ ] **2.3 Client `src/lib/videos/client.ts`.**
-- [ ] **2.4 UI — aba Vídeos do canal**
-  - Lista de vídeos (título, tema, badge de estado derivado); botão criar (título+tema).
-  - **Aceite:** criar vídeo aparece na lista; recarregar mantém.
-- [ ] **2.5 UI — página do vídeo `/videos/[id]` (shell)**
-  - Layout com as seções do Estúdio como **placeholders** + resumo lateral (reaproveitar
-    `ResumoProjeto`).
-  - **Aceite:** abrir vídeo mostra o shell com as 3 etapas vazias.
-- [ ] **CP-B — checkpoint:** canal → criar e abrir vídeos.
+- [x] **2.1 Schema `Video`** — todos os campos de artefato (roteiro/segmentos/timings/srt/
+  scheduledAt/voz/provider/promptSistema/notas) + `videos Video[]` no Channel; `db push`.
+- [x] **2.2 API vídeos** — `/api/channels/[id]/videos` (GET/POST, verifica posse do canal)
+  e `/api/videos/[id]` (GET/PATCH/DELETE, escopo `where { id, channel: { userId } }`).
+- [x] **2.3 Client `src/lib/videos/client.ts`** — listar/criar/obter/atualizar/excluir.
+- [x] **2.4 UI — aba Vídeos do canal** (`videos-aba.tsx`) — lista com título/tema + badge
+  de estágio derivado (`lib/videos/estagio.ts`); dialog criar (título+tema); excluir.
+- [x] **2.5 UI — página do vídeo `/videos/[id]` (shell)** (`videos/video-shell.tsx`) —
+  header + badge de estágio + barra de progresso + 4 cards de etapa (placeholders 3–5).
+- [x] **CP-B — VALIDADO:** criado vídeo "Por que o céu é azul?" (persistiu, id real),
+  badge "Ideia", aberto o shell. tsc/eslint limpos; sem erros de console.
 
 ## Fase 3 — Estúdio no vídeo: Roteiro persistido
 
