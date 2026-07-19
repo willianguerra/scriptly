@@ -9,11 +9,12 @@ import {
   type ResultadoRoteiro,
   type ScriptProvider,
 } from "./types.ts";
+import { OPENAI_MODELO_ECONOMICO } from "../ai-models.ts";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 /** Modelo padrão quando o canal não especifica. */
-export const OPENAI_MODELO_PADRAO = "gpt-4o-mini";
+export const OPENAI_MODELO_PADRAO = OPENAI_MODELO_ECONOMICO;
 
 type OpenAIResposta = {
   choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;

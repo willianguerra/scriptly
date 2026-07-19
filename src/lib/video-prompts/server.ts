@@ -1,5 +1,3 @@
-import { GEMINI_MODELO_PADRAO } from "../roteiro/gemini.ts";
-import { OPENAI_MODELO_PADRAO } from "../roteiro/openai.ts";
 import type { ProviderRoteiro } from "../roteiro/types.ts";
 import { DOTTI_AGENT_SYSTEM } from "./agent.ts";
 import {
@@ -8,6 +6,7 @@ import {
   type EtapaChatPrompts,
   type MensagemChatPrompts,
 } from "./flow.ts";
+import { resolverModeloVideo } from "./models.ts";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -147,7 +146,11 @@ async function gerarComOpenAI(
           "Content-Type": "application/json",
           Authorization: `Bearer ${entrada.chave}`,
         },
-        body: JSON.stringify({ model: modelo, messages: mensagens, max_tokens: 16000 }),
+        body: JSON.stringify({
+          model: modelo,
+          messages: mensagens,
+          max_completion_tokens: 65536,
+        }),
         cache: "no-store",
       });
     } catch {
@@ -215,7 +218,7 @@ async function gerarComGemini(
         body: JSON.stringify({
           system_instruction: { parts: [{ text: sistemaComContexto(entrada) }] },
           contents,
-          generationConfig: { maxOutputTokens: 16384 },
+          generationConfig: { maxOutputTokens: 65536 },
         }),
         cache: "no-store",
       });
@@ -281,9 +284,7 @@ export async function gerarRespostaDoAgente(
     );
   }
 
-  const modelo =
-    entrada.modelo?.trim() ||
-    (entrada.provider === "openai" ? OPENAI_MODELO_PADRAO : GEMINI_MODELO_PADRAO);
+  const modelo = resolverModeloVideo(entrada.provider, entrada.etapa, entrada.modelo);
   const texto =
     entrada.provider === "openai"
       ? await gerarComOpenAI(entrada, modelo)

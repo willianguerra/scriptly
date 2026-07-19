@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test src/lib/auth/auth.test.ts src/lib/crypto/secret-box.test.ts src/lib/roteiro/gemini.test.ts src/lib/roteiro/sync.test.ts src/lib/video-prompts/flow.test.ts src/lib/video-prompts/server.test.ts src/lib/voice-preference.test.ts",
+    "test": "node --test src/lib/auth/auth.test.ts src/lib/crypto/secret-box.test.ts src/lib/roteiro/gemini.test.ts src/lib/roteiro/openai.test.ts src/lib/roteiro/sync.test.ts src/lib/video-prompts/flow.test.ts src/lib/video-prompts/models.test.ts src/lib/video-prompts/server.test.ts src/lib/voice-preference.test.ts",
     "auth:setup": "node scripts/setup-auth.mjs",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
