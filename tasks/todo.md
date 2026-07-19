@@ -39,14 +39,15 @@ Cada tarefa tem **Aceite** (o que prova que ficou pronta) e **Verificação** (c
 
 ## Fase 3 — Estúdio no vídeo: Roteiro persistido
 
-- [ ] **3.1 Ligar `RoteiroEtapa` ao vídeo**
-  - Mover/reusar `RoteiroEtapa`; carregar `roteiro/tema/provider/promptSistema` do vídeo.
-  - Seleção de prompt puxa da Biblioteca + opção "usar padrão do canal".
-- [ ] **3.2 Persistir roteiro**
-  - `onGerar`/edição chamam PATCH `/api/videos/[id]` salvando os campos.
-  - **Aceite:** gerar/editar roteiro, recarregar a página, o texto continua lá.
-  - **Verificação:** preview — gerar com provider `fake`, F5, conferir persistência.
-- [ ] **CP-C começa:** valor central (fluxo persistido) em construção.
+- [x] **3.1 Ligar `RoteiroEtapa` ao vídeo** (`videos/roteiro-secao.tsx`) — reusa a
+  `RoteiroEtapa` apresentacional; carrega tema/provider/promptSistema/roteiro do vídeo;
+  dropdown de prompt puxa da Biblioteca + opção sintética "Padrão do canal".
+- [x] **3.2 Persistir roteiro** — auto-save com debounce (800ms) + save imediato após
+  gerar, via PATCH `/api/videos/[id]`; indicador "Salvando…/Salvo". Shell busca o canal
+  para o prompt padrão.
+- [x] **VALIDADO:** tema veio pré-preenchido do banco; gerado roteiro (fake, 378 chars);
+  F5 → roteiro persiste (71 palavras) e badge de estágio virou "Roteiro". Sem erros.
+- [~] **CP-C:** valor central em construção (falta Narração + Sincronização — Fase 4).
 
 ## Fase 4 — Narração + Sincronização persistidas
 

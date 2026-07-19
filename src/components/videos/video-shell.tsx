@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   Film,
   Loader2,
-  FileText,
   AudioLines,
   ListChecks,
   Images,
@@ -16,15 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { obterVideo } from "@/lib/videos/client";
+import { obterCanal } from "@/lib/channels/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
+import { RoteiroSecao } from "@/components/videos/roteiro-secao";
 import type { VideoSalvo } from "@/types/video";
 
-const ETAPAS = [
-  {
-    icon: FileText,
-    titulo: "Roteiro",
-    descricao: "Gere e edite o roteiro do vídeo (Fase 3).",
-  },
+const PLACEHOLDERS = [
   {
     icon: AudioLines,
     titulo: "Narração",
@@ -44,14 +40,25 @@ const ETAPAS = [
 
 export function VideoShell({ id }: { id: string }) {
   const [video, setVideo] = React.useState<VideoSalvo | null>(null);
+  const [promptPadraoCanal, setPromptPadraoCanal] = React.useState<string | null>(
+    null
+  );
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let ativo = true;
     obterVideo(id)
-      .then((v) => {
-        if (ativo) setVideo(v);
+      .then(async (v) => {
+        if (!ativo) return;
+        setVideo(v);
+        // Busca o prompt padrão do canal para oferecer como base do roteiro.
+        try {
+          const canal = await obterCanal(v.channelId);
+          if (ativo) setPromptPadraoCanal(canal.promptSistemaPadrao);
+        } catch {
+          // Sem canal não impede o fluxo do roteiro.
+        }
       })
       .catch((e) => {
         if (ativo)
@@ -64,6 +71,10 @@ export function VideoShell({ id }: { id: string }) {
       ativo = false;
     };
   }, [id]);
+
+  const handleVideoChange = React.useCallback((patch: Partial<VideoSalvo>) => {
+    setVideo((atual) => (atual ? { ...atual, ...patch } : atual));
+  }, []);
 
   if (carregando) {
     return (
@@ -122,8 +133,14 @@ export function VideoShell({ id }: { id: string }) {
         <Progress value={estagio.progresso} className="h-1.5" />
       </div>
 
+      <RoteiroSecao
+        video={video}
+        promptPadraoCanal={promptPadraoCanal}
+        onVideoChange={handleVideoChange}
+      />
+
       <div className="grid gap-4">
-        {ETAPAS.map(({ icon: Icon, titulo, descricao }) => (
+        {PLACEHOLDERS.map(({ icon: Icon, titulo, descricao }) => (
           <Card key={titulo}>
             <CardContent className="flex items-center gap-4 p-5">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
