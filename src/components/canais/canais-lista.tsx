@@ -26,13 +26,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   listarCanais,
   criarCanal,
   atualizarCanal,
   excluirCanal,
   type DadosCanal,
 } from "@/lib/channels/client";
+import { listarPrompts } from "@/lib/prompt-api";
 import type { CanalSalvo } from "@/types/channel";
+import type { PromptSalvo } from "@/types/prompt";
+
+const SEM_PROMPT = "__nenhum__";
 
 const VAZIO: DadosCanal = {
   nome: "",
@@ -40,6 +51,7 @@ const VAZIO: DadosCanal = {
   descricao: "",
   nicho: "",
   promptSistemaPadrao: "",
+  defaultPromptId: null,
 };
 
 export function CanaisLista() {
@@ -50,6 +62,7 @@ export function CanaisLista() {
   const [dialogAberto, setDialogAberto] = React.useState(false);
   const [editandoId, setEditandoId] = React.useState<string | null>(null);
   const [form, setForm] = React.useState<DadosCanal>(VAZIO);
+  const [prompts, setPrompts] = React.useState<PromptSalvo[]>([]);
   const [salvando, setSalvando] = React.useState(false);
   const [erroForm, setErroForm] = React.useState<string | null>(null);
 
@@ -60,6 +73,11 @@ export function CanaisLista() {
         setErro(e instanceof Error ? e.message : "Falha ao carregar canais.")
       )
       .finally(() => setCarregando(false));
+    listarPrompts()
+      .then(setPrompts)
+      .catch(() => {
+        // A biblioteca é opcional para o canal.
+      });
   }, []);
 
   function abrirNovo() {
@@ -77,6 +95,7 @@ export function CanaisLista() {
       descricao: c.descricao ?? "",
       nicho: c.nicho ?? "",
       promptSistemaPadrao: c.promptSistemaPadrao ?? "",
+      defaultPromptId: c.defaultPromptId,
     });
     setErroForm(null);
     setDialogAberto(true);
@@ -118,6 +137,8 @@ export function CanaisLista() {
       setErro(e instanceof Error ? e.message : "Não foi possível excluir.");
     }
   }
+
+  const promptSelecionado = prompts.find((p) => p.id === form.defaultPromptId);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -264,16 +285,45 @@ export function CanaisLista() {
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="canal-prompt">Prompt padrão do canal</Label>
-              <Textarea
-                id="canal-prompt"
-                value={form.promptSistemaPadrao ?? ""}
-                onChange={(e) =>
-                  setForm({ ...form, promptSistemaPadrao: e.target.value })
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="canal-prompt">Prompt padrão do canal</Label>
+                <Link
+                  href="/prompts"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Gerenciar biblioteca
+                </Link>
+              </div>
+              <Select
+                value={form.defaultPromptId ?? SEM_PROMPT}
+                onValueChange={(v) =>
+                  setForm({
+                    ...form,
+                    defaultPromptId: v === SEM_PROMPT ? null : v,
+                  })
                 }
-                placeholder="Tom/estilo herdado pelos roteiros (opcional)…"
-                className="min-h-24"
-              />
+              >
+                <SelectTrigger id="canal-prompt" className="w-full">
+                  <SelectValue placeholder="Escolha um prompt da biblioteca" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM_PROMPT}>Nenhum</SelectItem>
+                  {prompts.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Todo vídeo criado neste canal já nasce com este prompt — sem
+                precisar selecionar de novo.
+              </p>
+              {promptSelecionado && (
+                <p className="line-clamp-3 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  {promptSelecionado.texto || "(sem texto)"}
+                </p>
+              )}
             </div>
 
             {erroForm && (

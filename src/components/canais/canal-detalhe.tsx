@@ -139,8 +139,11 @@ function AbaDados({ canal }: { canal: CanalSalvo }) {
           <Campo rotulo="Descrição" valor={canal.descricao} />
           <Campo
             rotulo="Prompt padrão do canal"
-            valor={canal.promptSistemaPadrao}
-            mono
+            valor={
+              canal.defaultPromptNome
+                ? `${canal.defaultPromptNome} (biblioteca)`
+                : null
+            }
           />
         </CardContent>
       </Card>

@@ -16,11 +16,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useUsuarioAtual } from "@/components/user-context";
 import { atualizarVideo, obterVideo } from "@/lib/videos/client";
 import { obterCanal } from "@/lib/channels/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
 import { msParaInputDate, inputDateParaISO } from "@/lib/videos/data";
+import {
+  PROVIDERS_ROTEIRO,
+  normalizarProvider,
+  type ProviderRoteiro,
+} from "@/lib/roteiro/types";
 import {
   executarPipeline,
   type PipelineEtapa,
@@ -69,10 +81,13 @@ export function VideoShell({ id }: { id: string }) {
       .then(async (v) => {
         if (!ativo) return;
         setVideo(v);
-        // Busca o prompt padrão do canal para oferecer como base do roteiro.
+        // Busca o prompt padrão do canal (da biblioteca) como base do roteiro.
         try {
           const canal = await obterCanal(v.channelId);
-          if (ativo) setPromptPadraoCanal(canal.promptSistemaPadrao);
+          if (ativo)
+            setPromptPadraoCanal(
+              canal.defaultPromptTexto ?? canal.promptSistemaPadrao
+            );
         } catch {
           // Sem canal não impede o fluxo do roteiro.
         }
@@ -101,6 +116,15 @@ export function VideoShell({ id }: { id: string }) {
         atual ? { ...atual, scheduledAt: iso ? Date.parse(iso) : null } : atual
       );
       atualizarVideo(video.id, { scheduledAt: iso }).catch(() => {});
+    },
+    [video]
+  );
+
+  const handleProviderChange = React.useCallback(
+    (valor: ProviderRoteiro) => {
+      if (!video) return;
+      setVideo((atual) => (atual ? { ...atual, provider: valor } : atual));
+      atualizarVideo(video.id, { provider: valor }).catch(() => {});
     },
     [video]
   );
@@ -236,14 +260,35 @@ export function VideoShell({ id }: { id: string }) {
               </p>
             </div>
           </div>
-          <Button onClick={handleGerarTudo} disabled={autoRodando} className="gap-2">
-            {autoRodando ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
-            {autoRodando ? "Gerando…" : "Gerar tudo"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select
+              value={normalizarProvider(video.provider)}
+              onValueChange={(v) => handleProviderChange(v as ProviderRoteiro)}
+              disabled={autoRodando}
+            >
+              <SelectTrigger
+                aria-label="Modelo de IA"
+                className="h-9 w-[9.5rem]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROVIDERS_ROTEIRO.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleGerarTudo} disabled={autoRodando} className="gap-2">
+              {autoRodando ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {autoRodando ? "Gerando…" : "Gerar tudo"}
+            </Button>
+          </div>
         </div>
 
         {autoRodando && autoProgresso && (

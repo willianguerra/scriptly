@@ -55,6 +55,8 @@ model Channel {
   descricao           String?
   nicho               String?
   promptSistemaPadrao String?
+  defaultPromptId     String?
+  defaultPrompt       Prompt?  @relation("ChannelDefaultPrompt", fields: [defaultPromptId], references: [id], onDelete: SetNull)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   videos              Video[]
@@ -95,6 +97,8 @@ model Prompt {
   texto     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  canaisComoPadrao Channel[] @relation("ChannelDefaultPrompt")
 
   @@index([userId])
 }

@@ -5,6 +5,26 @@
 /** Identificadores dos providers suportados. */
 export type ProviderRoteiro = "fake" | "gemini" | "openai";
 
+/** Lista dos providers com rótulo/nota, para popular seletores. */
+export const PROVIDERS_ROTEIRO: {
+  value: ProviderRoteiro;
+  label: string;
+  nota: string;
+}[] = [
+  { value: "fake", label: "Teste (sem IA)", nota: "Não usa chave — valida o fluxo." },
+  { value: "gemini", label: "Google Gemini", nota: "Requer chave nas Configurações." },
+  { value: "openai", label: "OpenAI (GPT)", nota: "Requer chave nas Configurações." },
+];
+
+/** Garante um provider válido a partir de um valor arbitrário. */
+export function normalizarProvider(
+  valor: string | null | undefined
+): ProviderRoteiro {
+  return valor === "gemini" || valor === "openai" || valor === "fake"
+    ? valor
+    : "fake";
+}
+
 /** Entrada para gerar um roteiro. */
 export interface EntradaRoteiro {
   /** Tema/assunto do vídeo. */

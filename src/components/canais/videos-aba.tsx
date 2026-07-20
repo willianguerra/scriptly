@@ -41,14 +41,10 @@ import {
 } from "@/lib/videos/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
 import { formatarDataCurta } from "@/lib/videos/data";
-import type { ProviderRoteiro } from "@/lib/roteiro/types";
+import { PROVIDERS_ROTEIRO, type ProviderRoteiro } from "@/lib/roteiro/types";
 import type { VideoSalvo } from "@/types/video";
 
-const PROVIDERS: { value: ProviderRoteiro; label: string; nota: string }[] = [
-  { value: "fake", label: "Teste (sem IA)", nota: "Não usa chave — valida o fluxo." },
-  { value: "gemini", label: "Google Gemini", nota: "Requer chave nas Configurações." },
-  { value: "openai", label: "OpenAI (GPT)", nota: "Requer chave nas Configurações." },
-];
+const PROVIDERS = PROVIDERS_ROTEIRO;
 
 export function VideosAba({ channelId }: { channelId: string }) {
   const router = useRouter();

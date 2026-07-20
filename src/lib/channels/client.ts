@@ -9,6 +9,7 @@ export interface DadosCanal {
   descricao?: string | null;
   nicho?: string | null;
   promptSistemaPadrao?: string | null;
+  defaultPromptId?: string | null;
 }
 
 async function readError(res: Response): Promise<string> {
