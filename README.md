@@ -1,7 +1,7 @@
 # Scriptly
 
 Aplicação Next.js com ferramentas para roteiros, áudio, legendas e imagens.
-
+ 
 ## Desenvolvimento local
 
 Requisitos: Node.js 24+ e npm.
