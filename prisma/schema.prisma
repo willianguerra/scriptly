@@ -39,8 +39,51 @@ model User {
   updatedAt    DateTime        @updatedAt
   prompts      Prompt[]
   credentials  ApiCredential[]
+  channels     Channel[]
 
   @@index([status])
+}
+
+/// Canal de YouTube gerenciado por um usuário. Agrupa vídeos e guarda o tom
+/// padrão herdado pelos roteiros dos vídeos.
+model Channel {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nome                String
+  handle              String?
+  descricao           String?
+  nicho               String?
+  promptSistemaPadrao String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  videos              Video[]
+
+  @@index([userId])
+}
+
+/// Vídeo de um canal. Guarda os artefatos do Estúdio como texto (o áudio da
+/// narração não é persistido — é regenerado sob demanda a partir do roteiro).
+model Video {
+  id            String    @id @default(cuid())
+  channelId     String
+  channel       Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  titulo        String
+  tema          String?
+  scheduledAt   DateTime?
+  promptSistema String?
+  provider      String?
+  roteiro       String?
+  voz           String?
+  segmentos     Json?
+  timings       Json?
+  srt           String?
+  promptsCena   String?
+  notas         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([channelId])
 }
 
 /// Biblioteca de prompts de roteiro, por usuário.

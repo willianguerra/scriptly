@@ -4,7 +4,7 @@ import { BibliotecaPrompts } from "@/components/biblioteca-prompts";
 export const metadata: Metadata = {
   title: "Biblioteca de prompts",
   description:
-    "Salve e gerencie prompts nomeados para reutilizar na geração de roteiros do Estúdio.",
+    "Salve e gerencie prompts nomeados para reutilizar na geração de roteiros dos vídeos.",
 };
 
 export default function PromptsPage() {

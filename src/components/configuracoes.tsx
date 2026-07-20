@@ -49,13 +49,13 @@ const PROVIDERS_CONFIG: ProviderConfig[] = [
   {
     provider: "gemini",
     titulo: "Google Gemini",
-    descricao: "Usada no Estúdio para gerar roteiros e prompts.",
+    descricao: "Usada nos vídeos para gerar roteiros e prompts.",
     placeholder: "Cole sua chave do Gemini...",
   },
   {
     provider: "openai",
     titulo: "OpenAI (GPT)",
-    descricao: "Usada no Estúdio para gerar roteiros e prompts.",
+    descricao: "Usada nos vídeos para gerar roteiros e prompts.",
     placeholder: "Cole sua chave da OpenAI...",
   },
 ];

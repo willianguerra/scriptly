@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
   Type,
   Image as ImageIcon,
   Link2,
@@ -45,9 +44,11 @@ type ToolItem = {
 };
 
 const mainTools: ToolItem[] = [
-  { href: "/", label: "Inicio", icon: Home },
-  { href: "/estudio", label: "Estúdio", icon: Clapperboard },
+  { href: "/", label: "Canais", icon: Clapperboard },
   { href: "/prompts", label: "Biblioteca de Prompts", icon: Library },
+];
+
+const secondaryTools: ToolItem[] = [
   { href: "/divisor-audio", label: "Divisor de Áudio", icon: AudioLines },
   { href: "/upscaleimage", label: "Thumbnail YouTube", icon: Wand2 },
   { href: "/check_videos", label: "Contador de Videos", icon: ImageIcon },
@@ -55,8 +56,6 @@ const mainTools: ToolItem[] = [
   { href: "/linkinscricao", label: "Link de Inscricao", icon: Link2 },
   { href: "/contadorcaracteres", label: "Contador de Caracteres", icon: Type },
 ];
-
-const secondaryTools: ToolItem[] = [];
 
 const settingsItem: ToolItem = {
   href: "/configuracoes",
@@ -92,7 +91,7 @@ function SidebarNav({
   return (
     <>
       <p className="mb-2 px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        Ferramentas para Youtube
+        Gerenciador
       </p>
       <nav className="space-y-1">
         {mainTools.map((item) => (
@@ -108,7 +107,7 @@ function SidebarNav({
       {secondaryTools.length > 0 ? (
         <>
           <p className="mb-2 mt-6 px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Outras ferramentas
+            Ferramentas
           </p>
           <nav className="space-y-1">
             {secondaryTools.map((item) => (

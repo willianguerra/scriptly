@@ -91,7 +91,7 @@ export function BibliotecaPrompts() {
       <PageHeader
         icon={Library}
         title="Biblioteca de prompts"
-        description="Salve prompts nomeados (por canal ou estilo) e reutilize-os no Estúdio ao gerar roteiros."
+        description="Salve prompts nomeados (por canal ou estilo) e reutilize-os nos vídeos ao gerar roteiros."
       />
 
       <Card>
