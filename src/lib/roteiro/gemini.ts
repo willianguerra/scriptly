@@ -4,7 +4,7 @@
 
 import {
   montarPromptUsuario,
-  PROMPT_SISTEMA_PADRAO,
+  montarPromptSistema,
   type EntradaRoteiro,
   type ResultadoRoteiro,
   type ScriptProvider,
@@ -38,7 +38,7 @@ export class GeminiScriptProvider implements ScriptProvider {
   }
 
   async gerar(entrada: EntradaRoteiro): Promise<ResultadoRoteiro> {
-    const sistema = entrada.promptSistema?.trim() || PROMPT_SISTEMA_PADRAO;
+    const sistema = montarPromptSistema(entrada);
     const usuario = montarPromptUsuario(entrada);
 
     const url = `${GEMINI_BASE_URL}/${encodeURIComponent(this.modelo)}:generateContent`;

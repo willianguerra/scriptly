@@ -2,6 +2,9 @@
 // (Fase 1.1): a pipeline conversa apenas com esta interface, então trocar o
 // fornecedor de IA (Gemini, OpenAI, fake...) não exige mudar o resto do fluxo.
 
+import { PROMPT_BASE_ROTEIRO } from "./base-prompt.ts";
+import { rotuloIdioma } from "../idiomas.ts";
+
 /** Identificadores dos providers suportados. */
 export type ProviderRoteiro = "fake" | "gemini" | "openai";
 
@@ -30,10 +33,15 @@ export interface EntradaRoteiro {
   /** Tema/assunto do vídeo. */
   tema: string;
   /**
-   * Instruções de sistema do canal (tom, formato, duração-alvo...). Opcional:
-   * quando ausente, o provider usa um prompt padrão.
+   * "Tom & estilo" do canal (tom, atmosfera, formato...). Opcional: é somado
+   * SOBRE o prompt base — não o substitui.
    */
   promptSistema?: string;
+  /**
+   * Idioma de saída do roteiro (nome em inglês do Whisper, ex.: "spanish", ou
+   * "auto"). Quando definido, o roteiro é escrito nesse idioma.
+   */
+  idioma?: string;
   /**
    * Variáveis extras substituídas no prompt (ex.: {duracao}, {publico}).
    * Fica a cargo de quem monta o prompt referenciá-las.
@@ -61,12 +69,38 @@ export interface ScriptProvider {
   gerar(entrada: EntradaRoteiro): Promise<ResultadoRoteiro>;
 }
 
-/** Prompt de sistema padrão quando o canal não define o seu. */
-export const PROMPT_SISTEMA_PADRAO =
-  "Você é um roteirista de vídeos para YouTube. Escreva um roteiro de narração " +
-  "em português do Brasil, fluido e envolvente, apenas com o texto falado " +
-  "(sem marcações de cena, sem cabeçalhos, sem indicações técnicas). " +
-  "Comece com um gancho forte nas primeiras frases.";
+/** Prompt de sistema base (regras de ofício), sempre aplicado. */
+export const PROMPT_SISTEMA_PADRAO = PROMPT_BASE_ROTEIRO;
+
+/**
+ * Monta o system prompt final: PROMPT BASE (fixo) + idioma de saída (se houver)
+ * + "tom & estilo" do canal por cima. O tom&estilo NUNCA substitui a base.
+ */
+export function montarPromptSistema(entrada: EntradaRoteiro): string {
+  const partes: string[] = [PROMPT_BASE_ROTEIRO];
+
+  const idioma = entrada.idioma?.trim();
+  if (idioma && idioma !== "auto") {
+    partes.push(
+      "\n════════════════════════════════════════\n" +
+        "IDIOMA DE SAÍDA (OBRIGATÓRIO)\n" +
+        "════════════════════════════════════════\n" +
+        `Escreva TODO o roteiro em ${rotuloIdioma(idioma)}. Não misture idiomas.`
+    );
+  }
+
+  const tom = entrada.promptSistema?.trim();
+  if (tom) {
+    partes.push(
+      "\n════════════════════════════════════════\n" +
+        "TOM & ESTILO DESTE CANAL (aplicar sobre as regras acima)\n" +
+        "════════════════════════════════════════\n" +
+        tom
+    );
+  }
+
+  return partes.join("\n");
+}
 
 /**
  * Monta o prompt final do usuário a partir do tema e das variáveis. As

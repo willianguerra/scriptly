@@ -378,6 +378,7 @@ export function VideoShell({ id }: { id: string }) {
         video={video}
         promptPadraoCanal={promptPadraoCanal}
         defaultProvider={defaultProvider}
+        idioma={idiomaCanal}
         onVideoChange={handleVideoChange}
       />
 

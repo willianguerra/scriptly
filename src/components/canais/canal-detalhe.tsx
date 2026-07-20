@@ -140,7 +140,7 @@ function AbaDados({ canal }: { canal: CanalSalvo }) {
           <Campo rotulo="Idioma da narração" valor={rotuloIdioma(canal.idioma)} />
           <Campo rotulo="Descrição" valor={canal.descricao} />
           <Campo
-            rotulo="Prompt padrão do canal"
+            rotulo="Tom & estilo do canal"
             valor={
               canal.defaultPromptNome
                 ? `${canal.defaultPromptNome} (biblioteca)`

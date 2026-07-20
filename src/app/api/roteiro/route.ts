@@ -63,6 +63,7 @@ export async function POST(req: Request) {
     tema,
     promptSistema:
       typeof body?.promptSistema === "string" ? body.promptSistema : undefined,
+    idioma: typeof body?.idioma === "string" ? body.idioma : undefined,
     variaveis:
       body?.variaveis && typeof body.variaveis === "object"
         ? (body.variaveis as Record<string, string>)

@@ -4,7 +4,7 @@
 
 import {
   montarPromptUsuario,
-  PROMPT_SISTEMA_PADRAO,
+  montarPromptSistema,
   type EntradaRoteiro,
   type ResultadoRoteiro,
   type ScriptProvider,
@@ -33,7 +33,7 @@ export class OpenAIScriptProvider implements ScriptProvider {
   }
 
   async gerar(entrada: EntradaRoteiro): Promise<ResultadoRoteiro> {
-    const sistema = entrada.promptSistema?.trim() || PROMPT_SISTEMA_PADRAO;
+    const sistema = montarPromptSistema(entrada);
     const usuario = montarPromptUsuario(entrada);
 
     let res: Response;
