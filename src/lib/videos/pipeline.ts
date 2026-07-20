@@ -22,7 +22,7 @@ import {
   segmentosParaTexto,
   type Segmento,
 } from "@/lib/roteiro/sync";
-import { gerarRoteiro } from "@/lib/roteiro-client";
+import { gerarRoteiroLongo } from "@/lib/roteiro-client";
 import { gerarRespostaChat } from "@/lib/video-prompts/client";
 import type { MensagemChatPrompts } from "@/lib/video-prompts/flow";
 import { transcribeSamples } from "@/lib/whisper-browser";
@@ -59,6 +59,10 @@ type PipelineOpts = {
   username: string;
   /** Idioma da narração p/ o Whisper (nome em inglês ou "auto"). */
   idioma: string;
+  /** Tamanho-alvo do roteiro em caracteres (0 = curto, 1 parte). */
+  tamanhoAlvo: number;
+  /** Voz padrão do canal (idApi Darkvi), usada se o vídeo não tiver voz. */
+  vozPadrao: string;
   onProgress: (p: PipelineProgresso) => void;
   onPatch?: (patch: Partial<VideoSalvo>) => void;
 };
@@ -75,7 +79,7 @@ function idMsg() {
  */
 export async function executarPipeline(
   video: VideoSalvo,
-  { username, idioma, onProgress, onPatch }: PipelineOpts
+  { username, idioma, tamanhoAlvo, vozPadrao, onProgress, onPatch }: PipelineOpts
 ): Promise<void> {
   const provider = normalizarProvider(video.provider);
 
@@ -85,11 +89,17 @@ export async function executarPipeline(
   let tema = (video.tema ?? "").trim();
   if (!roteiro) {
     if (!tema) tema = video.titulo.trim();
-    const resultado = await gerarRoteiro({
+    const resultado = await gerarRoteiroLongo({
       provider,
       tema,
       promptSistema: video.promptSistema?.trim() || undefined,
       idioma,
+      tamanhoAlvo,
+      onParte: (atual, total) => {
+        if (total > 1) {
+          onProgress({ etapa: "roteiro", detalhe: `parte ${atual}/${total}` });
+        }
+      },
     });
     roteiro = resultado.texto.trim();
     await atualizarVideo(video.id, { roteiro, tema, provider });
@@ -109,7 +119,9 @@ export async function executarPipeline(
   const voz =
     video.voz && ids.includes(video.voz)
       ? video.voz
-      : escolherVozPreferida(ids, lerPreferenciaVoz(username));
+      : vozPadrao && ids.includes(vozPadrao)
+        ? vozPadrao
+        : escolherVozPreferida(ids, lerPreferenciaVoz(username));
 
   const audioId = await criarAudio({ text: roteiro, voice: voz });
   await aguardarConclusao(audioId);

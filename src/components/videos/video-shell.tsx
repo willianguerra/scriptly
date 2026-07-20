@@ -68,6 +68,8 @@ export function VideoShell({ id }: { id: string }) {
   const [defaultProvider, setDefaultProvider] =
     React.useState<ProviderRoteiro | null>(null);
   const [idiomaCanal, setIdiomaCanal] = React.useState<string>("auto");
+  const [tamanhoAlvoCanal, setTamanhoAlvoCanal] = React.useState<number>(0);
+  const [vozPadraoCanal, setVozPadraoCanal] = React.useState<string>("");
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<string | null>(null);
 
@@ -94,6 +96,8 @@ export function VideoShell({ id }: { id: string }) {
               canal.defaultPromptTexto ?? canal.promptSistemaPadrao
             );
             setIdiomaCanal(normalizarIdioma(canal.idioma));
+            setTamanhoAlvoCanal(canal.tamanhoAlvo ?? 0);
+            setVozPadraoCanal(canal.vozPadrao ?? "");
           }
         } catch {
           // Sem canal não impede o fluxo do roteiro.
@@ -157,6 +161,8 @@ export function VideoShell({ id }: { id: string }) {
       await executarPipeline(video, {
         username,
         idioma: idiomaCanal,
+        tamanhoAlvo: tamanhoAlvoCanal,
+        vozPadrao: vozPadraoCanal,
         onProgress: setAutoProgresso,
         onPatch: handleVideoChange,
       });
@@ -172,7 +178,15 @@ export function VideoShell({ id }: { id: string }) {
       setAutoRodando(false);
       setAutoProgresso(null);
     }
-  }, [video, autoRodando, username, idiomaCanal, handleVideoChange]);
+  }, [
+    video,
+    autoRodando,
+    username,
+    idiomaCanal,
+    tamanhoAlvoCanal,
+    vozPadraoCanal,
+    handleVideoChange,
+  ]);
 
   // Auto-início quando aberto com ?auto=1 (vindo de "Criar e gerar tudo").
   React.useEffect(() => {
@@ -379,6 +393,7 @@ export function VideoShell({ id }: { id: string }) {
         promptPadraoCanal={promptPadraoCanal}
         defaultProvider={defaultProvider}
         idioma={idiomaCanal}
+        tamanhoAlvo={tamanhoAlvoCanal}
         onVideoChange={handleVideoChange}
       />
 
@@ -386,6 +401,7 @@ export function VideoShell({ id }: { id: string }) {
         key={`narracao-${sectionsKey}`}
         video={video}
         idioma={idiomaCanal}
+        vozPadrao={vozPadraoCanal}
         onVideoChange={handleVideoChange}
       />
 

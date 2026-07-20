@@ -90,12 +90,14 @@ function segmentosDoVideo(valor: unknown): Segmento[] {
 type NarracaoSincronizacaoSecaoProps = {
   video: VideoSalvo;
   idioma: string;
+  vozPadrao: string;
   onVideoChange: (patch: Partial<VideoSalvo>) => void;
 };
 
 export function NarracaoSincronizacaoSecao({
   video,
   idioma,
+  vozPadrao,
   onVideoChange,
 }: NarracaoSincronizacaoSecaoProps) {
   const { username } = useUsuarioAtual();
@@ -125,18 +127,13 @@ export function NarracaoSincronizacaoSecao({
   );
   const [erro, setErro] = React.useState<string | null>(null);
   const [salvo, setSalvo] = React.useState(false);
+  const vozManualRef = React.useRef(false);
 
   React.useEffect(() => {
     let ativo = true;
     listarVozes()
       .then((lista) => {
-        if (!ativo) return;
-        setVozes(lista);
-        const ids = lista.map((item) => item.idApi);
-        setVoz((prev) => {
-          if (prev && ids.includes(prev)) return prev;
-          return escolherVozPreferida(ids, lerPreferenciaVoz(username));
-        });
+        if (ativo) setVozes(lista);
       })
       .catch((error) => {
         if (!ativo) return;
@@ -147,7 +144,21 @@ export function NarracaoSincronizacaoSecao({
     return () => {
       ativo = false;
     };
-  }, [username]);
+  }, []);
+
+  // Pré-seleção da voz: escolha do usuário > voz do vídeo > voz padrão do canal
+  // > preferência. Reavalia quando as vozes ou a voz padrão chegam.
+  React.useEffect(() => {
+    if (vozes.length === 0 || vozManualRef.current) return;
+    const ids = vozes.map((v) => v.idApi);
+    const escolha =
+      video.voz && ids.includes(video.voz)
+        ? video.voz
+        : vozPadrao && ids.includes(vozPadrao)
+          ? vozPadrao
+          : escolherVozPreferida(ids, lerPreferenciaVoz(username));
+    setVoz(escolha);
+  }, [vozes, vozPadrao, video.voz, username]);
 
   React.useEffect(() => {
     return () => {
@@ -161,6 +172,7 @@ export function NarracaoSincronizacaoSecao({
   }
 
   function handleVozChange(value: string) {
+    vozManualRef.current = true;
     setVoz(value);
     salvarPreferenciaVoz(value, username);
     // Persiste a voz escolhida no vídeo (o áudio em si não é salvo).

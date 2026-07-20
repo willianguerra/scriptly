@@ -42,6 +42,13 @@ export interface EntradaRoteiro {
    * "auto"). Quando definido, o roteiro é escrito nesse idioma.
    */
   idioma?: string;
+  /** Geração em partes: índice (1-based) e total de partes. */
+  parteAtual?: number;
+  totalPartes?: number;
+  /** Trecho final do que já foi escrito, para continuar sem repetir. */
+  trechoAnterior?: string;
+  /** Alvo de caracteres desta parte. */
+  alvoCaracteres?: number;
   /**
    * Variáveis extras substituídas no prompt (ex.: {duracao}, {publico}).
    * Fica a cargo de quem monta o prompt referenciá-las.
@@ -108,6 +115,7 @@ export function montarPromptSistema(entrada: EntradaRoteiro): string {
  */
 export function montarPromptUsuario(entrada: EntradaRoteiro): string {
   const partes = [`Tema do vídeo: ${entrada.tema.trim()}`];
+
   const variaveis = entrada.variaveis ?? {};
   const chaves = Object.keys(variaveis);
   if (chaves.length > 0) {
@@ -118,5 +126,29 @@ export function montarPromptUsuario(entrada: EntradaRoteiro): string {
       if (valor) partes.push(`- ${chave}: ${valor}`);
     }
   }
+
+  // Geração em partes: instrui a continuidade e o alvo desta parte.
+  const total = entrada.totalPartes ?? 1;
+  if (total > 1 && entrada.parteAtual) {
+    partes.push("");
+    partes.push(
+      `Esta é a PARTE ${entrada.parteAtual} de ${total} do roteiro. ` +
+        `Alvo desta parte: ~${entrada.alvoCaracteres ?? 5000} caracteres. ` +
+        (entrada.parteAtual === 1
+          ? "Comece o roteiro (com o hook)."
+          : entrada.parteAtual === total
+            ? "Esta é a ÚLTIMA parte: conduza ao fechamento."
+            : "Continue o arco, sem recomeçar nem reintroduzir.")
+    );
+  }
+  const tail = entrada.trechoAnterior?.trim();
+  if (tail) {
+    partes.push("");
+    partes.push(
+      "TRECHO FINAL DO QUE JÁ FOI ESCRITO (continue exatamente daqui, sem repetir, sem meta-introdução):"
+    );
+    partes.push(tail);
+  }
+
   return partes.join("\n");
 }
