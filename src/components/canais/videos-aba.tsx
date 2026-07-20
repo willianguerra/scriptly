@@ -27,13 +27,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   listarVideos,
   criarVideo,
+  atualizarVideo,
   excluirVideo,
 } from "@/lib/videos/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
 import { formatarDataCurta } from "@/lib/videos/data";
+import type { ProviderRoteiro } from "@/lib/roteiro/types";
 import type { VideoSalvo } from "@/types/video";
+
+const PROVIDERS: { value: ProviderRoteiro; label: string; nota: string }[] = [
+  { value: "fake", label: "Teste (sem IA)", nota: "Não usa chave — valida o fluxo." },
+  { value: "gemini", label: "Google Gemini", nota: "Requer chave nas Configurações." },
+  { value: "openai", label: "OpenAI (GPT)", nota: "Requer chave nas Configurações." },
+];
 
 export function VideosAba({ channelId }: { channelId: string }) {
   const router = useRouter();
@@ -44,6 +59,7 @@ export function VideosAba({ channelId }: { channelId: string }) {
   const [dialogAberto, setDialogAberto] = React.useState(false);
   const [titulo, setTitulo] = React.useState("");
   const [tema, setTema] = React.useState("");
+  const [provider, setProvider] = React.useState<ProviderRoteiro>("fake");
   const [salvando, setSalvando] = React.useState(false);
   const [erroForm, setErroForm] = React.useState<string | null>(null);
 
@@ -68,6 +84,7 @@ export function VideosAba({ channelId }: { channelId: string }) {
   function abrirNovo() {
     setTitulo("");
     setTema("");
+    setProvider("fake");
     setErroForm(null);
     setDialogAberto(true);
   }
@@ -80,6 +97,11 @@ export function VideosAba({ channelId }: { channelId: string }) {
         titulo,
         tema: tema.trim() || undefined,
       });
+      // Persiste o modelo escolhido para o roteiro/prompts usarem.
+      if (provider !== "fake") {
+        await atualizarVideo(criado.id, { provider }).catch(() => {});
+        criado.provider = provider;
+      }
       if (gerarTudo) {
         router.push(`/videos/${criado.id}?auto=1`);
         return;
@@ -214,6 +236,28 @@ export function VideosAba({ channelId }: { channelId: string }) {
                 placeholder="Assunto para gerar o roteiro depois…"
                 className="min-h-20"
               />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="video-provider">Modelo de IA</Label>
+              <Select
+                value={provider}
+                onValueChange={(v) => setProvider(v as ProviderRoteiro)}
+              >
+                <SelectTrigger id="video-provider" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROVIDERS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {PROVIDERS.find((p) => p.value === provider)?.nota} Usado no
+                &quot;Criar e gerar tudo&quot;.
+              </p>
             </div>
 
             {erroForm && (
