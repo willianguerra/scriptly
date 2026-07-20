@@ -89,6 +89,7 @@ export async function executarPipeline(
       provider,
       tema,
       promptSistema: video.promptSistema?.trim() || undefined,
+      idioma,
     });
     roteiro = resultado.texto.trim();
     await atualizarVideo(video.id, { roteiro, tema, provider });

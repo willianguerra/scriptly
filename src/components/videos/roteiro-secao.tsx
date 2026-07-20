@@ -22,6 +22,7 @@ type RoteiroSecaoProps = {
   video: VideoSalvo;
   promptPadraoCanal: string | null;
   defaultProvider: ProviderRoteiro | null;
+  idioma: string;
   onVideoChange: (patch: Partial<VideoSalvo>) => void;
 };
 
@@ -29,6 +30,7 @@ export function RoteiroSecao({
   video,
   promptPadraoCanal,
   defaultProvider,
+  idioma,
   onVideoChange,
 }: RoteiroSecaoProps) {
   const [modo, setModo] = React.useState<ModoRoteiro>("ia");
@@ -162,6 +164,7 @@ export function RoteiroSecao({
         provider,
         tema: tema.trim(),
         promptSistema: promptSistema.trim() || undefined,
+        idioma,
       });
       setRoteiro(resultado.texto);
       await salvar({

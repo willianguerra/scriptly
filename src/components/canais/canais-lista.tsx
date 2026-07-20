@@ -310,7 +310,7 @@ export function CanaisLista() {
             </div>
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="canal-prompt">Prompt padrão do canal</Label>
+                <Label htmlFor="canal-prompt">Tom &amp; estilo do canal</Label>
                 <Link
                   href="/prompts"
                   className="text-xs font-medium text-primary hover:underline"
@@ -340,8 +340,8 @@ export function CanaisLista() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Todo vídeo criado neste canal já nasce com este prompt — sem
-                precisar selecionar de novo.
+                Somado sobre o roteirista base ao gerar. Todo vídeo do canal já
+                nasce com este tom — sem precisar selecionar de novo.
               </p>
               {promptSelecionado && (
                 <p className="line-clamp-3 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
