@@ -97,7 +97,12 @@ export async function POST(
   }
 
   const { id } = await params;
-  if (!(await canalDoUsuario(id, user.id))) {
+  // Busca o canal com o prompt padrão para já nascer no vídeo.
+  const canal = await prisma.channel.findFirst({
+    where: { id, userId: user.id },
+    select: { id: true, defaultPrompt: { select: { texto: true } } },
+  });
+  if (!canal) {
     return NextResponse.json({ error: "Canal não encontrado." }, { status: 404 });
   }
 
@@ -116,6 +121,8 @@ export async function POST(
       channelId: id,
       titulo: parsed.data.titulo,
       tema: tema && tema.length > 0 ? tema : null,
+      // Herda o prompt padrão do canal (da biblioteca) — sem precisar selecionar.
+      promptSistema: canal.defaultPrompt?.texto ?? null,
     },
   });
   return NextResponse.json(toVideoDTO(criado), { status: 201 });

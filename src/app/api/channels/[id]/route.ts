@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { toDTO } from "../route";
+import { toDTO, channelInclude, resolverDefaultPromptId } from "../route";
 
 export const runtime = "nodejs";
 
@@ -13,13 +13,15 @@ const updateSchema = z.object({
   descricao: z.string().max(2_000).nullable().optional(),
   nicho: z.string().trim().max(200).nullable().optional(),
   promptSistemaPadrao: z.string().max(20_000).nullable().optional(),
+  defaultPromptId: z.string().nullable().optional(),
 });
 
-// Converte "" -> null para campos opcionais; mantém undefined fora do update.
+// Converte "" -> null para os campos de texto; mantém undefined fora do update.
+// defaultPromptId é tratado à parte (verificação de posse).
 function normalizar(data: z.infer<typeof updateSchema>) {
   const out: Record<string, string | null> = {};
   for (const [chave, valor] of Object.entries(data)) {
-    if (valor === undefined) continue;
+    if (chave === "defaultPromptId" || valor === undefined) continue;
     if (valor === null) {
       out[chave] = null;
       continue;
@@ -43,6 +45,7 @@ export async function GET(
   const { id } = await params;
   const canal = await prisma.channel.findFirst({
     where: { id, userId: user.id },
+    include: channelInclude,
   });
   if (!canal) {
     return NextResponse.json({ error: "Canal não encontrado." }, { status: 404 });
@@ -67,15 +70,26 @@ export async function PATCH(
     return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
+  const data = normalizar(parsed.data);
+  if (parsed.data.defaultPromptId !== undefined) {
+    data.defaultPromptId = await resolverDefaultPromptId(
+      user.id,
+      parsed.data.defaultPromptId
+    );
+  }
+
   const resultado = await prisma.channel.updateMany({
     where: { id, userId: user.id },
-    data: normalizar(parsed.data),
+    data,
   });
   if (resultado.count === 0) {
     return NextResponse.json({ error: "Canal não encontrado." }, { status: 404 });
   }
 
-  const atualizado = await prisma.channel.findUnique({ where: { id } });
+  const atualizado = await prisma.channel.findUnique({
+    where: { id },
+    include: channelInclude,
+  });
   return NextResponse.json(atualizado ? toDTO(atualizado) : null);
 }
 

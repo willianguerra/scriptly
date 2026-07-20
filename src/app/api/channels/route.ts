@@ -13,7 +13,13 @@ const channelSchema = z.object({
   descricao: z.string().max(2_000).optional(),
   nicho: z.string().trim().max(200).optional(),
   promptSistemaPadrao: z.string().max(20_000).optional(),
+  defaultPromptId: z.string().nullable().optional(),
 });
+
+// Inclui o prompt padrão (da biblioteca) resolvido em todas as leituras.
+export const channelInclude = {
+  defaultPrompt: { select: { id: true, nome: true, texto: true } },
+} as const;
 
 type ChannelRow = {
   id: string;
@@ -22,6 +28,8 @@ type ChannelRow = {
   descricao: string | null;
   nicho: string | null;
   promptSistemaPadrao: string | null;
+  defaultPromptId: string | null;
+  defaultPrompt: { id: string; nome: string; texto: string } | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -34,6 +42,9 @@ export function toDTO(c: ChannelRow): CanalSalvo {
     descricao: c.descricao,
     nicho: c.nicho,
     promptSistemaPadrao: c.promptSistemaPadrao,
+    defaultPromptId: c.defaultPromptId,
+    defaultPromptNome: c.defaultPrompt?.nome ?? null,
+    defaultPromptTexto: c.defaultPrompt?.texto ?? null,
     criadoEm: c.createdAt.getTime(),
     atualizadoEm: c.updatedAt.getTime(),
   };
@@ -46,6 +57,19 @@ function limpar(valor: string | undefined): string | null {
   return t.length > 0 ? t : null;
 }
 
+// Só aceita o defaultPromptId se o prompt existir e for do próprio usuário.
+export async function resolverDefaultPromptId(
+  userId: string,
+  defaultPromptId: string | null | undefined
+): Promise<string | null> {
+  if (!defaultPromptId) return null;
+  const prompt = await prisma.prompt.findFirst({
+    where: { id: defaultPromptId, userId },
+    select: { id: true },
+  });
+  return prompt ? prompt.id : null;
+}
+
 // GET /api/channels -> lista os canais do usuário logado.
 export async function GET() {
   const user = await getCurrentUser();
@@ -56,6 +80,7 @@ export async function GET() {
   const canais = await prisma.channel.findMany({
     where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
+    include: channelInclude,
   });
   return NextResponse.json(canais.map(toDTO));
 }
@@ -76,6 +101,11 @@ export async function POST(req: Request) {
     );
   }
 
+  const defaultPromptId = await resolverDefaultPromptId(
+    user.id,
+    parsed.data.defaultPromptId
+  );
+
   const criado = await prisma.channel.create({
     data: {
       userId: user.id,
@@ -84,7 +114,9 @@ export async function POST(req: Request) {
       descricao: limpar(parsed.data.descricao),
       nicho: limpar(parsed.data.nicho),
       promptSistemaPadrao: limpar(parsed.data.promptSistemaPadrao),
+      defaultPromptId,
     },
+    include: channelInclude,
   });
   return NextResponse.json(toDTO(criado), { status: 201 });
 }
