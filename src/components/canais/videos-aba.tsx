@@ -36,12 +36,12 @@ import {
 import {
   listarVideos,
   criarVideo,
-  atualizarVideo,
   excluirVideo,
 } from "@/lib/videos/client";
 import { estagioDoVideo } from "@/lib/videos/estagio";
 import { formatarDataCurta } from "@/lib/videos/data";
 import { PROVIDERS_ROTEIRO, type ProviderRoteiro } from "@/lib/roteiro/types";
+import { obterConfiguracoes } from "@/lib/settings/client";
 import type { VideoSalvo } from "@/types/video";
 
 const PROVIDERS = PROVIDERS_ROTEIRO;
@@ -56,6 +56,8 @@ export function VideosAba({ channelId }: { channelId: string }) {
   const [titulo, setTitulo] = React.useState("");
   const [tema, setTema] = React.useState("");
   const [provider, setProvider] = React.useState<ProviderRoteiro>("fake");
+  const [defaultProvider, setDefaultProvider] =
+    React.useState<ProviderRoteiro | null>(null);
   const [salvando, setSalvando] = React.useState(false);
   const [erroForm, setErroForm] = React.useState<string | null>(null);
 
@@ -72,15 +74,20 @@ export function VideosAba({ channelId }: { channelId: string }) {
       .finally(() => {
         if (ativo) setCarregando(false);
       });
+    obterConfiguracoes()
+      .then((c) => {
+        if (ativo) setDefaultProvider(c.defaultProvider);
+      })
+      .catch(() => {});
     return () => {
       ativo = false;
     };
   }, [channelId]);
 
   function abrirNovo() {
+    setProvider(defaultProvider ?? "fake");
     setTitulo("");
     setTema("");
-    setProvider("fake");
     setErroForm(null);
     setDialogAberto(true);
   }
@@ -92,12 +99,8 @@ export function VideosAba({ channelId }: { channelId: string }) {
       const criado = await criarVideo(channelId, {
         titulo,
         tema: tema.trim() || undefined,
+        provider,
       });
-      // Persiste o modelo escolhido para o roteiro/prompts usarem.
-      if (provider !== "fake") {
-        await atualizarVideo(criado.id, { provider }).catch(() => {});
-        criado.provider = provider;
-      }
       if (gerarTudo) {
         router.push(`/videos/${criado.id}?auto=1`);
         return;
@@ -254,6 +257,15 @@ export function VideosAba({ channelId }: { channelId: string }) {
                 {PROVIDERS.find((p) => p.value === provider)?.nota} Usado no
                 &quot;Criar e gerar tudo&quot;.
               </p>
+              {defaultProvider === null && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Sem modelo padrão. Escolha um acima ou defina um em{" "}
+                  <Link href="/configuracoes" className="underline">
+                    Configurações
+                  </Link>
+                  .
+                </p>
+              )}
             </div>
 
             {erroForm && (

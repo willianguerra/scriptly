@@ -32,7 +32,7 @@ export async function listarVideos(channelId: string): Promise<VideoSalvo[]> {
 
 export async function criarVideo(
   channelId: string,
-  dados: { titulo: string; tema?: string }
+  dados: { titulo: string; tema?: string; provider?: string }
 ): Promise<VideoSalvo> {
   const res = await fetch(`/api/channels/${channelId}/videos`, {
     method: "POST",

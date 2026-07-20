@@ -33,6 +33,7 @@ import {
   normalizarProvider,
   type ProviderRoteiro,
 } from "@/lib/roteiro/types";
+import { obterConfiguracoes } from "@/lib/settings/client";
 import {
   executarPipeline,
   type PipelineEtapa,
@@ -63,6 +64,8 @@ export function VideoShell({ id }: { id: string }) {
   const [promptPadraoCanal, setPromptPadraoCanal] = React.useState<string | null>(
     null
   );
+  const [defaultProvider, setDefaultProvider] =
+    React.useState<ProviderRoteiro | null>(null);
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<string | null>(null);
 
@@ -103,6 +106,18 @@ export function VideoShell({ id }: { id: string }) {
       ativo = false;
     };
   }, [id]);
+
+  React.useEffect(() => {
+    let ativo = true;
+    obterConfiguracoes()
+      .then((c) => {
+        if (ativo) setDefaultProvider(c.defaultProvider);
+      })
+      .catch(() => {});
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const handleVideoChange = React.useCallback((patch: Partial<VideoSalvo>) => {
     setVideo((atual) => (atual ? { ...atual, ...patch } : atual));
@@ -291,6 +306,16 @@ export function VideoShell({ id }: { id: string }) {
           </div>
         </div>
 
+        {defaultProvider === null && !autoRodando && (
+          <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+            Sem modelo padrão — usando o selecionado acima. Defina um em{" "}
+            <Link href="/configuracoes" className="underline">
+              Configurações
+            </Link>
+            .
+          </p>
+        )}
+
         {autoRodando && autoProgresso && (
           <div className="mt-4 space-y-2" role="status" aria-live="polite">
             <div className="flex items-center justify-between gap-2 text-sm">
@@ -347,6 +372,7 @@ export function VideoShell({ id }: { id: string }) {
         key={`roteiro-${sectionsKey}`}
         video={video}
         promptPadraoCanal={promptPadraoCanal}
+        defaultProvider={defaultProvider}
         onVideoChange={handleVideoChange}
       />
 

@@ -6,6 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Settings,
   KeyRound,
   Save,
@@ -14,6 +21,7 @@ import {
   AlertCircle,
   Loader2,
   PlugZap,
+  Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
@@ -22,6 +30,14 @@ import {
   CREDENTIAL_PROVIDERS,
   type CredentialProvider,
 } from "@/lib/credentials/providers";
+import {
+  PROVIDERS_ROTEIRO,
+  type ProviderRoteiro,
+} from "@/lib/roteiro/types";
+import {
+  obterConfiguracoes,
+  salvarModeloPadrao,
+} from "@/lib/settings/client";
 
 type StatusCredencial = {
   provider: CredentialProvider;
@@ -111,6 +127,8 @@ export default function Configuracoes() {
         </p>
       ) : null}
 
+      <ModeloPadraoCard />
+
       {carregando || !status ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
@@ -126,6 +144,106 @@ export default function Configuracoes() {
         ))
       )}
     </div>
+  );
+}
+
+const SEM_MODELO = "__nenhum__";
+
+// Card do modelo de IA padrão: pré-selecionado nas gerações; sem ele, um aviso.
+function ModeloPadraoCard() {
+  const [modelo, setModelo] = useState<ProviderRoteiro | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [salvo, setSalvo] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    obterConfiguracoes()
+      .then((c) => setModelo(c.defaultProvider))
+      .catch(() => {})
+      .finally(() => setCarregando(false));
+  }, []);
+
+  async function handleChange(valor: string) {
+    const novo = valor === SEM_MODELO ? null : (valor as ProviderRoteiro);
+    setModelo(novo);
+    setErro(null);
+    setSalvando(true);
+    try {
+      await salvarModeloPadrao(novo);
+      setSalvo(true);
+      window.setTimeout(() => setSalvo(false), 1500);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Card className="gap-0 overflow-hidden py-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-gradient-to-br from-primary/8 via-primary/4 to-transparent px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+            <Cpu className="h-5 w-5" />
+          </span>
+          <div className="leading-tight">
+            <p className="font-medium">Modelo de IA padrão</p>
+            <p className="text-sm text-muted-foreground">
+              Pré-selecionado ao gerar roteiros e prompts dos vídeos.
+            </p>
+          </div>
+        </div>
+        {salvando ? (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando…
+          </span>
+        ) : salvo ? (
+          <span className="flex items-center gap-1.5 text-xs text-emerald-500">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Salvo
+          </span>
+        ) : null}
+      </div>
+
+      <CardContent className="space-y-3 p-5">
+        <div className="grid gap-1.5 sm:max-w-xs">
+          <Label htmlFor="modelo-padrao">Modelo recomendado</Label>
+          <Select
+            value={modelo ?? SEM_MODELO}
+            onValueChange={handleChange}
+            disabled={carregando}
+          >
+            <SelectTrigger id="modelo-padrao" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={SEM_MODELO}>Nenhum</SelectItem>
+              {PROVIDERS_ROTEIRO.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  {p.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {!carregando && modelo === null && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <span>
+              Nenhum modelo padrão definido. Escolha um aqui para que ele seja
+              recomendado automaticamente — ou selecione o modelo em cada vídeo.
+            </span>
+          </div>
+        )}
+
+        {erro && (
+          <p className="text-sm text-destructive" role="alert">
+            {erro}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

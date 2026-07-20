@@ -10,6 +10,7 @@ export const runtime = "nodejs";
 const createSchema = z.object({
   titulo: z.string().trim().min(1).max(300),
   tema: z.string().max(2_000).optional(),
+  provider: z.enum(["fake", "gemini", "openai"]).optional(),
 });
 
 type VideoRow = {
@@ -97,11 +98,17 @@ export async function POST(
   }
 
   const { id } = await params;
-  // Busca o canal com o prompt padrão para já nascer no vídeo.
-  const canal = await prisma.channel.findFirst({
-    where: { id, userId: user.id },
-    select: { id: true, defaultPrompt: { select: { texto: true } } },
-  });
+  // Busca o canal (prompt padrão) e a preferência de modelo padrão do usuário.
+  const [canal, dono] = await Promise.all([
+    prisma.channel.findFirst({
+      where: { id, userId: user.id },
+      select: { id: true, defaultPrompt: { select: { texto: true } } },
+    }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { defaultProvider: true },
+    }),
+  ]);
   if (!canal) {
     return NextResponse.json({ error: "Canal não encontrado." }, { status: 404 });
   }
@@ -123,6 +130,8 @@ export async function POST(
       tema: tema && tema.length > 0 ? tema : null,
       // Herda o prompt padrão do canal (da biblioteca) — sem precisar selecionar.
       promptSistema: canal.defaultPrompt?.texto ?? null,
+      // Modelo: o escolhido na criação, senão o padrão do usuário (pode ser null).
+      provider: parsed.data.provider ?? dono?.defaultProvider ?? null,
     },
   });
   return NextResponse.json(toVideoDTO(criado), { status: 201 });

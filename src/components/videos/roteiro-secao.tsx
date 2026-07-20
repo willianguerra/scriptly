@@ -1,37 +1,37 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Check, Loader2, PencilLine, Sparkles } from "lucide-react";
 
 import { RoteiroEtapa, type EtapaStatus } from "@/components/estudio-workflow";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { listarPrompts } from "@/lib/prompt-api";
 import { gerarRoteiro } from "@/lib/roteiro-client";
 import { atualizarVideo } from "@/lib/videos/client";
-import type { ProviderRoteiro } from "@/lib/roteiro/types";
+import { normalizarProvider, type ProviderRoteiro } from "@/lib/roteiro/types";
+import { cn } from "@/lib/utils";
 import type { PromptSalvo } from "@/types/prompt";
 import type { VideoSalvo } from "@/types/video";
 
-const PROVIDERS_VALIDOS: ProviderRoteiro[] = ["fake", "gemini", "openai"];
-
-function normalizarProvider(valor: string | null): ProviderRoteiro {
-  return PROVIDERS_VALIDOS.includes(valor as ProviderRoteiro)
-    ? (valor as ProviderRoteiro)
-    : "fake";
-}
-
 type StatusSalvamento = "idle" | "salvando" | "salvo";
+type ModoRoteiro = "ia" | "manual";
 
 type RoteiroSecaoProps = {
   video: VideoSalvo;
   promptPadraoCanal: string | null;
+  defaultProvider: ProviderRoteiro | null;
   onVideoChange: (patch: Partial<VideoSalvo>) => void;
 };
 
 export function RoteiroSecao({
   video,
   promptPadraoCanal,
+  defaultProvider,
   onVideoChange,
 }: RoteiroSecaoProps) {
+  const [modo, setModo] = React.useState<ModoRoteiro>("ia");
   const [tema, setTema] = React.useState(video.tema ?? "");
   const [provider, setProvider] = React.useState<ProviderRoteiro>(
     normalizarProvider(video.provider)
@@ -184,17 +184,45 @@ export function RoteiroSecao({
 
   return (
     <div className="space-y-2">
-      <div className="flex h-5 items-center justify-end gap-1.5 text-xs text-muted-foreground">
-        {statusSalvamento === "salvando" && (
-          <>
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando…
-          </>
-        )}
-        {statusSalvamento === "salvo" && (
-          <>
-            <Check className="h-3.5 w-3.5 text-emerald-500" /> Salvo
-          </>
-        )}
+      <div className="flex items-center justify-between gap-2">
+        <div className="inline-flex rounded-lg border bg-muted/40 p-0.5 text-sm">
+          <button
+            type="button"
+            onClick={() => setModo("ia")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
+              modo === "ia"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Sparkles className="h-4 w-4" /> Gerar com IA
+          </button>
+          <button
+            type="button"
+            onClick={() => setModo("manual")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
+              modo === "manual"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <PencilLine className="h-4 w-4" /> Escrever à mão
+          </button>
+        </div>
+        <span className="flex h-5 items-center gap-1.5 text-xs text-muted-foreground">
+          {statusSalvamento === "salvando" && (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando…
+            </>
+          )}
+          {statusSalvamento === "salvo" && (
+            <>
+              <Check className="h-3.5 w-3.5 text-emerald-500" /> Salvo
+            </>
+          )}
+        </span>
       </div>
 
       {erro && (
@@ -203,23 +231,58 @@ export function RoteiroSecao({
         </p>
       )}
 
-      <RoteiroEtapa
-        status={status}
-        tema={tema}
-        provider={provider}
-        prompts={promptsComCanal}
-        promptId={promptId}
-        promptSistema={promptSistema}
-        roteiro={roteiro}
-        gerando={gerando}
-        palavras={palavras}
-        onTemaChange={setTema}
-        onProviderChange={setProvider}
-        onPromptSelect={handleSelecionarPrompt}
-        onPromptChange={handlePromptSistemaChange}
-        onRoteiroChange={setRoteiro}
-        onGerar={handleGerar}
-      />
+      {modo === "ia" && defaultProvider === null && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
+          <Sparkles className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Nenhum modelo de IA padrão definido. Escolha o modelo abaixo, ou
+            defina um padrão em{" "}
+            <Link href="/configuracoes" className="font-medium underline">
+              Configurações
+            </Link>{" "}
+            para não precisar selecionar toda vez.
+          </span>
+        </div>
+      )}
+
+      {modo === "manual" ? (
+        <div className="space-y-2 rounded-xl border p-4">
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="roteiro-manual">Roteiro (escrito à mão)</Label>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {palavras} palavras · {roteiro.length} caracteres
+            </span>
+          </div>
+          <Textarea
+            id="roteiro-manual"
+            value={roteiro}
+            onChange={(e) => setRoteiro(e.target.value)}
+            placeholder="Cole ou escreva aqui o roteiro da narração…"
+            className="min-h-64 resize-y leading-relaxed"
+          />
+          <p className="text-xs text-muted-foreground">
+            Sem IA — a narração usará exatamente este texto. Salvo automaticamente.
+          </p>
+        </div>
+      ) : (
+        <RoteiroEtapa
+          status={status}
+          tema={tema}
+          provider={provider}
+          prompts={promptsComCanal}
+          promptId={promptId}
+          promptSistema={promptSistema}
+          roteiro={roteiro}
+          gerando={gerando}
+          palavras={palavras}
+          onTemaChange={setTema}
+          onProviderChange={setProvider}
+          onPromptSelect={handleSelecionarPrompt}
+          onPromptChange={handlePromptSistemaChange}
+          onRoteiroChange={setRoteiro}
+          onGerar={handleGerar}
+        />
+      )}
     </div>
   );
 }
