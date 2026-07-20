@@ -95,7 +95,7 @@ function MensagensChat({
             }`}
           >
             <p className="mb-1 text-xs font-semibold opacity-70">
-              {mensagem.role === "user" ? "Você" : "DOTTI"}
+              {mensagem.role === "user" ? "Você" : "Scriptly"}
             </p>
             <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed">
               {mensagem.content}
@@ -169,7 +169,7 @@ export function VideoPromptsChatView({
           </span>
           <div className="min-w-0 flex-1 space-y-1">
             <CardTitle><h2 className="text-base leading-6 sm:text-lg"><span className="text-muted-foreground">4.</span> Gere os prompts de vídeo</h2></CardTitle>
-            <CardDescription className="leading-relaxed">Converse com o DOTTI AGENT 2.0 usando o roteiro e a sincronização já carregados.</CardDescription>
+            <CardDescription className="leading-relaxed">Converse com o Scriptly Agent 2.0 usando o roteiro e a sincronização já carregados.</CardDescription>
           </div>
           <Badge variant={status === "atual" ? "default" : "secondary"} className="shrink-0">{STATUS_LABEL[status]}</Badge>
         </div>
@@ -185,7 +185,7 @@ export function VideoPromptsChatView({
           <>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="gap-1.5"><Bot className="size-3.5" /> DOTTI AGENT 2.0</Badge>
+                <Badge variant="outline" className="gap-1.5"><Bot className="size-3.5" /> Scriptly Agent 2.0</Badge>
                 <Badge variant="secondary">{provider === "fake" ? "Modo de teste" : provider === "openai" ? "OpenAI" : "Gemini"}</Badge>
               </div>
               {resultadoCenas && (

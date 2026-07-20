@@ -17,7 +17,7 @@ function formatTime(totalSeconds: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export default function SincronizacaoDottiPage() {
+export default function SincronizacaoScriptlyPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
@@ -98,7 +98,7 @@ export default function SincronizacaoDottiPage() {
 
     const header =
       "============================================================\n" +
-      "SINCRONIZACAO DOTTI SYNC - DETECCAO DE FALA (INTERVALOS)\n" +
+      "SINCRONIZACAO SCRIPTLY SYNC - DETECCAO DE FALA (INTERVALOS)\n" +
       "============================================================\n" +
       `Arquivo: ${fileName}\n` +
       `Duracao: ${durationLabel}\n` +

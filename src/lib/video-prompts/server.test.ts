@@ -53,7 +53,7 @@ test("a análise usa o modelo OpenAI potente e recebe o contexto completo", asyn
     assert.equal(bodyRecebido.model, "gpt-5.4");
     assert.equal(bodyRecebido.max_completion_tokens, 65536);
     assert.equal(bodyRecebido.max_tokens, undefined);
-    assert.match(mensagens[0].content, /DOTTI AGENT 2\.0/);
+    assert.match(mensagens[0].content, /Scriptly Agent 2\.0/);
     assert.match(mensagens[0].content, /ROTEIRO FIXO DO PROJETO/);
     assert.match(mensagens.at(-1)?.content ?? "", /Execute somente a ETAPA 1/);
   } finally {

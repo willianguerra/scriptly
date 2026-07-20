@@ -63,7 +63,7 @@ Cada tarefa tem **Aceite** (o que prova que ficou pronta) e **Verificação** (c
 ## Fase 5 — Prompts de imagem/cena por vídeo
 
 > Mudança de abordagem (melhor que o plano): a base do origin/main já tem o agente
-> `VideoPromptsChat` (DOTTI AGENT 2.0) que gera prompts de cena sincronizados. Reusei
+> `VideoPromptsChat` (Scriptly Agent 2.0) que gera prompts de cena sincronizados. Reusei
 > esse agente em vez de recriar via separador — só faltava PERSISTIR.
 
 - [x] **5.1 Campo `promptsCena` (texto) no `Video`** (em vez de tabela ScenePrompt — o
