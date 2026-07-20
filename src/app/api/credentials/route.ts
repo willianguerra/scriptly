@@ -38,7 +38,11 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
-  await salvarCredencial(user.id, parsed.data.provider, parsed.data.key);
+  try {
+    await salvarCredencial(user.id, parsed.data.provider, parsed.data.key);
+  } catch (e) {
+    return erroAoSalvar(e);
+  }
   return NextResponse.json({ ok: true });
 }
 
@@ -57,6 +61,18 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
-  await removerCredencial(user.id, parsed.data.provider);
+  try {
+    await removerCredencial(user.id, parsed.data.provider);
+  } catch (e) {
+    return erroAoSalvar(e);
+  }
   return NextResponse.json({ ok: true });
+}
+
+// Loga o erro real no servidor e devolve uma mensagem útil para o dono do app.
+// A causa mais comum aqui é APP_ENCRYPTION_KEY ausente/ inválida na cifragem.
+function erroAoSalvar(e: unknown): NextResponse {
+  console.error("[credentials] falha ao gravar credencial:", e);
+  const msg = e instanceof Error ? e.message : "Erro inesperado ao salvar a chave.";
+  return NextResponse.json({ error: msg }, { status: 500 });
 }
