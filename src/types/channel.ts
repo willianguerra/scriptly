@@ -6,6 +6,10 @@ export interface CanalSalvo {
   descricao: string | null;
   nicho: string | null;
   idioma: string | null;
+  tamanhoAlvo: number | null;
+  vozPadrao: string | null;
+  estiloCenas: string | null;
+  estiloThumbnail: string | null;
   promptSistemaPadrao: string | null;
   /** Prompt da biblioteca usado como padrão dos vídeos deste canal. */
   defaultPromptId: string | null;

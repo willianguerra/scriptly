@@ -14,59 +14,22 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  listarCanais,
-  criarCanal,
-  atualizarCanal,
-  excluirCanal,
-  type DadosCanal,
-} from "@/lib/channels/client";
+import { CanalCentralModal } from "@/components/canais/canal-central-modal";
+import { listarCanais, excluirCanal } from "@/lib/channels/client";
 import { listarPrompts } from "@/lib/prompt-api";
-import { IDIOMAS, normalizarIdioma } from "@/lib/idiomas";
 import type { CanalSalvo } from "@/types/channel";
 import type { PromptSalvo } from "@/types/prompt";
 
-const SEM_PROMPT = "__nenhum__";
-
-const VAZIO: DadosCanal = {
-  nome: "",
-  handle: "",
-  descricao: "",
-  nicho: "",
-  idioma: "portuguese",
-  promptSistemaPadrao: "",
-  defaultPromptId: null,
-};
-
 export function CanaisLista() {
   const [lista, setLista] = React.useState<CanalSalvo[]>([]);
+  const [prompts, setPrompts] = React.useState<PromptSalvo[]>([]);
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<string | null>(null);
 
-  const [dialogAberto, setDialogAberto] = React.useState(false);
-  const [editandoId, setEditandoId] = React.useState<string | null>(null);
-  const [form, setForm] = React.useState<DadosCanal>(VAZIO);
-  const [prompts, setPrompts] = React.useState<PromptSalvo[]>([]);
-  const [salvando, setSalvando] = React.useState(false);
-  const [erroForm, setErroForm] = React.useState<string | null>(null);
+  const [modalAberto, setModalAberto] = React.useState(false);
+  const [canalEditando, setCanalEditando] = React.useState<CanalSalvo | null>(
+    null
+  );
 
   React.useEffect(() => {
     listarCanais()
@@ -83,46 +46,22 @@ export function CanaisLista() {
   }, []);
 
   function abrirNovo() {
-    setEditandoId(null);
-    setForm(VAZIO);
-    setErroForm(null);
-    setDialogAberto(true);
+    setCanalEditando(null);
+    setModalAberto(true);
   }
 
   function abrirEdicao(c: CanalSalvo) {
-    setEditandoId(c.id);
-    setForm({
-      nome: c.nome,
-      handle: c.handle ?? "",
-      descricao: c.descricao ?? "",
-      nicho: c.nicho ?? "",
-      idioma: normalizarIdioma(c.idioma),
-      promptSistemaPadrao: c.promptSistemaPadrao ?? "",
-      defaultPromptId: c.defaultPromptId,
-    });
-    setErroForm(null);
-    setDialogAberto(true);
+    setCanalEditando(c);
+    setModalAberto(true);
   }
 
-  async function handleSalvar() {
-    setErroForm(null);
-    setSalvando(true);
-    try {
-      if (editandoId) {
-        const atualizado = await atualizarCanal(editandoId, form);
-        setLista((atual) =>
-          atual.map((c) => (c.id === editandoId ? atualizado : c))
-        );
-      } else {
-        const criado = await criarCanal(form);
-        setLista((atual) => [criado, ...atual]);
-      }
-      setDialogAberto(false);
-    } catch (e) {
-      setErroForm(e instanceof Error ? e.message : "Não foi possível salvar.");
-    } finally {
-      setSalvando(false);
-    }
+  function handleSalvo(salvo: CanalSalvo) {
+    setLista((atual) => {
+      const existe = atual.some((c) => c.id === salvo.id);
+      return existe
+        ? atual.map((c) => (c.id === salvo.id ? salvo : c))
+        : [salvo, ...atual];
+    });
   }
 
   async function handleExcluir(c: CanalSalvo) {
@@ -140,8 +79,6 @@ export function CanaisLista() {
       setErro(e instanceof Error ? e.message : "Não foi possível excluir.");
     }
   }
-
-  const promptSelecionado = prompts.find((p) => p.id === form.defaultPromptId);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -233,153 +170,13 @@ export function CanaisLista() {
         </div>
       )}
 
-      <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              {editandoId ? "Editar canal" : "Novo canal"}
-            </DialogTitle>
-            <DialogDescription>
-              Dados do canal. O prompt padrão define o tom herdado pelos roteiros
-              dos vídeos.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid gap-1.5">
-              <Label htmlFor="canal-nome">Nome</Label>
-              <Input
-                id="canal-nome"
-                value={form.nome}
-                onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                placeholder="Ex.: Ciência em 5 minutos"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="grid gap-1.5">
-                <Label htmlFor="canal-handle">Handle</Label>
-                <Input
-                  id="canal-handle"
-                  value={form.handle ?? ""}
-                  onChange={(e) => setForm({ ...form, handle: e.target.value })}
-                  placeholder="@meucanal"
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="canal-nicho">Nicho</Label>
-                <Input
-                  id="canal-nicho"
-                  value={form.nicho ?? ""}
-                  onChange={(e) => setForm({ ...form, nicho: e.target.value })}
-                  placeholder="Ex.: Curiosidades"
-                />
-              </div>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="canal-idioma">Idioma da narração</Label>
-              <Select
-                value={normalizarIdioma(form.idioma)}
-                onValueChange={(v) => setForm({ ...form, idioma: v })}
-              >
-                <SelectTrigger id="canal-idioma" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {IDIOMAS.map((i) => (
-                    <SelectItem key={i.value} value={i.value}>
-                      {i.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Usado na sincronização para transcrever o áudio no idioma certo.
-              </p>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="canal-descricao">Descrição</Label>
-              <Textarea
-                id="canal-descricao"
-                value={form.descricao ?? ""}
-                onChange={(e) =>
-                  setForm({ ...form, descricao: e.target.value })
-                }
-                placeholder="Sobre o que é o canal…"
-                className="min-h-20"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="canal-prompt">Tom &amp; estilo do canal</Label>
-                <Link
-                  href="/prompts"
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  Gerenciar biblioteca
-                </Link>
-              </div>
-              <Select
-                value={form.defaultPromptId ?? SEM_PROMPT}
-                onValueChange={(v) =>
-                  setForm({
-                    ...form,
-                    defaultPromptId: v === SEM_PROMPT ? null : v,
-                  })
-                }
-              >
-                <SelectTrigger id="canal-prompt" className="w-full">
-                  <SelectValue placeholder="Escolha um prompt da biblioteca" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={SEM_PROMPT}>Nenhum</SelectItem>
-                  {prompts.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Somado sobre o roteirista base ao gerar. Todo vídeo do canal já
-                nasce com este tom — sem precisar selecionar de novo.
-              </p>
-              {promptSelecionado && (
-                <p className="line-clamp-3 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                  {promptSelecionado.texto || "(sem texto)"}
-                </p>
-              )}
-            </div>
-
-            {erroForm && (
-              <p className="text-sm text-destructive" role="alert">
-                {erroForm}
-              </p>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setDialogAberto(false)}
-              disabled={salvando}
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="gap-2"
-              onClick={handleSalvar}
-              disabled={!form.nome.trim() || salvando}
-            >
-              {salvando ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              {editandoId ? "Salvar" : "Criar canal"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CanalCentralModal
+        aberto={modalAberto}
+        canal={canalEditando}
+        prompts={prompts}
+        onOpenChange={setModalAberto}
+        onSalvo={handleSalvo}
+      />
     </div>
   );
 }

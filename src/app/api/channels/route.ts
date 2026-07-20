@@ -13,6 +13,10 @@ const channelSchema = z.object({
   descricao: z.string().max(2_000).optional(),
   nicho: z.string().trim().max(200).optional(),
   idioma: z.string().trim().max(40).optional(),
+  tamanhoAlvo: z.number().int().min(0).max(500_000).nullable().optional(),
+  vozPadrao: z.string().max(200).optional(),
+  estiloCenas: z.string().max(20_000).optional(),
+  estiloThumbnail: z.string().max(20_000).optional(),
   promptSistemaPadrao: z.string().max(20_000).optional(),
   defaultPromptId: z.string().nullable().optional(),
 });
@@ -29,6 +33,10 @@ type ChannelRow = {
   descricao: string | null;
   nicho: string | null;
   idioma: string | null;
+  tamanhoAlvo: number | null;
+  vozPadrao: string | null;
+  estiloCenas: string | null;
+  estiloThumbnail: string | null;
   promptSistemaPadrao: string | null;
   defaultPromptId: string | null;
   defaultPrompt: { id: string; nome: string; texto: string } | null;
@@ -44,6 +52,10 @@ export function toDTO(c: ChannelRow): CanalSalvo {
     descricao: c.descricao,
     nicho: c.nicho,
     idioma: c.idioma,
+    tamanhoAlvo: c.tamanhoAlvo,
+    vozPadrao: c.vozPadrao,
+    estiloCenas: c.estiloCenas,
+    estiloThumbnail: c.estiloThumbnail,
     promptSistemaPadrao: c.promptSistemaPadrao,
     defaultPromptId: c.defaultPromptId,
     defaultPromptNome: c.defaultPrompt?.nome ?? null,
@@ -117,6 +129,10 @@ export async function POST(req: Request) {
       descricao: limpar(parsed.data.descricao),
       nicho: limpar(parsed.data.nicho),
       idioma: limpar(parsed.data.idioma),
+      tamanhoAlvo: parsed.data.tamanhoAlvo ?? null,
+      vozPadrao: limpar(parsed.data.vozPadrao),
+      estiloCenas: limpar(parsed.data.estiloCenas),
+      estiloThumbnail: limpar(parsed.data.estiloThumbnail),
       promptSistemaPadrao: limpar(parsed.data.promptSistemaPadrao),
       defaultPromptId,
     },

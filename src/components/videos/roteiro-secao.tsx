@@ -8,7 +8,7 @@ import { RoteiroEtapa, type EtapaStatus } from "@/components/estudio-workflow";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { listarPrompts } from "@/lib/prompt-api";
-import { gerarRoteiro } from "@/lib/roteiro-client";
+import { gerarRoteiroLongo } from "@/lib/roteiro-client";
 import { atualizarVideo } from "@/lib/videos/client";
 import { normalizarProvider, type ProviderRoteiro } from "@/lib/roteiro/types";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ type RoteiroSecaoProps = {
   promptPadraoCanal: string | null;
   defaultProvider: ProviderRoteiro | null;
   idioma: string;
+  tamanhoAlvo: number;
   onVideoChange: (patch: Partial<VideoSalvo>) => void;
 };
 
@@ -31,6 +32,7 @@ export function RoteiroSecao({
   promptPadraoCanal,
   defaultProvider,
   idioma,
+  tamanhoAlvo,
   onVideoChange,
 }: RoteiroSecaoProps) {
   const [modo, setModo] = React.useState<ModoRoteiro>("ia");
@@ -45,6 +47,10 @@ export function RoteiroSecao({
   const [roteiro, setRoteiro] = React.useState(video.roteiro ?? "");
   const [prompts, setPrompts] = React.useState<PromptSalvo[]>([]);
   const [gerando, setGerando] = React.useState(false);
+  const [parteProgresso, setParteProgresso] = React.useState<{
+    atual: number;
+    total: number;
+  } | null>(null);
   const [erro, setErro] = React.useState<string | null>(null);
   const [statusSalvamento, setStatusSalvamento] =
     React.useState<StatusSalvamento>("idle");
@@ -160,11 +166,14 @@ export function RoteiroSecao({
     setErro(null);
     setGerando(true);
     try {
-      const resultado = await gerarRoteiro({
+      const resultado = await gerarRoteiroLongo({
         provider,
         tema: tema.trim(),
         promptSistema: promptSistema.trim() || undefined,
         idioma,
+        tamanhoAlvo,
+        onParte: (atual, total) =>
+          setParteProgresso(total > 1 ? { atual, total } : null),
       });
       setRoteiro(resultado.texto);
       await salvar({
@@ -177,6 +186,7 @@ export function RoteiroSecao({
       setErro(e instanceof Error ? e.message : "Falha ao gerar o roteiro.");
     } finally {
       setGerando(false);
+      setParteProgresso(null);
     }
   }
 
@@ -231,6 +241,14 @@ export function RoteiroSecao({
       {erro && (
         <p className="text-sm text-destructive" role="alert">
           {erro}
+        </p>
+      )}
+
+      {parteProgresso && (
+        <p className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Gerando roteiro longo — parte {parteProgresso.atual} de{" "}
+          {parteProgresso.total}…
         </p>
       )}
 

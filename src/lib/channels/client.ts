@@ -9,6 +9,10 @@ export interface DadosCanal {
   descricao?: string | null;
   nicho?: string | null;
   idioma?: string | null;
+  tamanhoAlvo?: number | null;
+  vozPadrao?: string | null;
+  estiloCenas?: string | null;
+  estiloThumbnail?: string | null;
   promptSistemaPadrao?: string | null;
   defaultPromptId?: string | null;
 }

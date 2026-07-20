@@ -13,6 +13,10 @@ const updateSchema = z.object({
   descricao: z.string().max(2_000).nullable().optional(),
   nicho: z.string().trim().max(200).nullable().optional(),
   idioma: z.string().trim().max(40).nullable().optional(),
+  tamanhoAlvo: z.number().int().min(0).max(500_000).nullable().optional(),
+  vozPadrao: z.string().max(200).nullable().optional(),
+  estiloCenas: z.string().max(20_000).nullable().optional(),
+  estiloThumbnail: z.string().max(20_000).nullable().optional(),
   promptSistemaPadrao: z.string().max(20_000).nullable().optional(),
   defaultPromptId: z.string().nullable().optional(),
 });
@@ -22,12 +26,14 @@ const updateSchema = z.object({
 function normalizar(data: z.infer<typeof updateSchema>) {
   const out: Record<string, string | null> = {};
   for (const [chave, valor] of Object.entries(data)) {
-    if (chave === "defaultPromptId" || valor === undefined) continue;
+    // Tratados à parte (não são string simples).
+    if (chave === "defaultPromptId" || chave === "tamanhoAlvo") continue;
+    if (valor === undefined) continue;
     if (valor === null) {
       out[chave] = null;
       continue;
     }
-    const t = valor.trim();
+    const t = (valor as string).trim();
     out[chave] = chave === "nome" ? t : t.length > 0 ? t : null;
   }
   return out;
@@ -71,7 +77,10 @@ export async function PATCH(
     return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
-  const data = normalizar(parsed.data);
+  const data: Record<string, unknown> = normalizar(parsed.data);
+  if (parsed.data.tamanhoAlvo !== undefined) {
+    data.tamanhoAlvo = parsed.data.tamanhoAlvo;
+  }
   if (parsed.data.defaultPromptId !== undefined) {
     data.defaultPromptId = await resolverDefaultPromptId(
       user.id,

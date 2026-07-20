@@ -64,6 +64,14 @@ export async function POST(req: Request) {
     promptSistema:
       typeof body?.promptSistema === "string" ? body.promptSistema : undefined,
     idioma: typeof body?.idioma === "string" ? body.idioma : undefined,
+    parteAtual:
+      typeof body?.parteAtual === "number" ? body.parteAtual : undefined,
+    totalPartes:
+      typeof body?.totalPartes === "number" ? body.totalPartes : undefined,
+    trechoAnterior:
+      typeof body?.trechoAnterior === "string" ? body.trechoAnterior : undefined,
+    alvoCaracteres:
+      typeof body?.alvoCaracteres === "number" ? body.alvoCaracteres : undefined,
     variaveis:
       body?.variaveis && typeof body.variaveis === "object"
         ? (body.variaveis as Record<string, string>)
