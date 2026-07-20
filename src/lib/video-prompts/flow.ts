@@ -53,8 +53,8 @@ export function montarInstrucaoDaEtapa(
     case "analise":
       return [
         ajuste
-          ? "Revise somente a ETAPA 1 do DOTTI AGENT 2.0 conforme o pedido do usuário."
-          : "Execute somente a ETAPA 1 do DOTTI AGENT 2.0.",
+          ? "Revise somente a ETAPA 1 do Scriptly Agent 2.0 conforme o pedido do usuário."
+          : "Execute somente a ETAPA 1 do Scriptly Agent 2.0.",
         "Analise o roteiro fixo e responda no formato 'ROTEIRO RECEBIDO E ANALISADO'.",
         "Defina gênero, cenário, paleta, os 3 personagens principais em ordem de importância e todos os secundários.",
         "Não gere ainda prompts de referência nem prompts de cena.",
@@ -79,7 +79,7 @@ export function montarInstrucaoDaEtapa(
       const pedido = ajuste;
       if (!pedido) throw new Error("Escreva o que precisa revisar nos prompts.");
       return [
-        "A FASE 2 está ativa. Trate o pedido abaixo seguindo as ETAPAS 4 e 5 do DOTTI AGENT 2.0.",
+        "A FASE 2 está ativa. Trate o pedido abaixo seguindo as ETAPAS 4 e 5 do Scriptly Agent 2.0.",
         "Use os prompts já gerados no histórico; não peça que sejam enviados novamente, preserve numeração, timestamps e todo conteúdo entre colchetes.",
         "PEDIDO DO USUÁRIO:",
         pedido,

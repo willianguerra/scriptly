@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { obterCanal } from "@/lib/channels/client";
+import { rotuloIdioma } from "@/lib/idiomas";
 import type { CanalSalvo } from "@/types/channel";
 import { cn } from "@/lib/utils";
 import { VideosAba } from "@/components/canais/videos-aba";
@@ -136,6 +137,7 @@ function AbaDados({ canal }: { canal: CanalSalvo }) {
           <Campo rotulo="Nome" valor={canal.nome} />
           <Campo rotulo="Handle" valor={canal.handle} />
           <Campo rotulo="Nicho" valor={canal.nicho} />
+          <Campo rotulo="Idioma da narração" valor={rotuloIdioma(canal.idioma)} />
           <Campo rotulo="Descrição" valor={canal.descricao} />
           <Campo
             rotulo="Prompt padrão do canal"

@@ -34,6 +34,7 @@ import {
   type ProviderRoteiro,
 } from "@/lib/roteiro/types";
 import { obterConfiguracoes } from "@/lib/settings/client";
+import { normalizarIdioma } from "@/lib/idiomas";
 import {
   executarPipeline,
   type PipelineEtapa,
@@ -66,6 +67,7 @@ export function VideoShell({ id }: { id: string }) {
   );
   const [defaultProvider, setDefaultProvider] =
     React.useState<ProviderRoteiro | null>(null);
+  const [idiomaCanal, setIdiomaCanal] = React.useState<string>("auto");
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<string | null>(null);
 
@@ -87,10 +89,12 @@ export function VideoShell({ id }: { id: string }) {
         // Busca o prompt padrão do canal (da biblioteca) como base do roteiro.
         try {
           const canal = await obterCanal(v.channelId);
-          if (ativo)
+          if (ativo) {
             setPromptPadraoCanal(
               canal.defaultPromptTexto ?? canal.promptSistemaPadrao
             );
+            setIdiomaCanal(normalizarIdioma(canal.idioma));
+          }
         } catch {
           // Sem canal não impede o fluxo do roteiro.
         }
@@ -152,6 +156,7 @@ export function VideoShell({ id }: { id: string }) {
     try {
       await executarPipeline(video, {
         username,
+        idioma: idiomaCanal,
         onProgress: setAutoProgresso,
         onPatch: handleVideoChange,
       });
@@ -167,7 +172,7 @@ export function VideoShell({ id }: { id: string }) {
       setAutoRodando(false);
       setAutoProgresso(null);
     }
-  }, [video, autoRodando, username, handleVideoChange]);
+  }, [video, autoRodando, username, idiomaCanal, handleVideoChange]);
 
   // Auto-início quando aberto com ?auto=1 (vindo de "Criar e gerar tudo").
   React.useEffect(() => {
@@ -379,6 +384,7 @@ export function VideoShell({ id }: { id: string }) {
       <NarracaoSincronizacaoSecao
         key={`narracao-${sectionsKey}`}
         video={video}
+        idioma={idiomaCanal}
         onVideoChange={handleVideoChange}
       />
 

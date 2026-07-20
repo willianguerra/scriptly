@@ -5,13 +5,13 @@ import {
   Eye,
   EyeOff,
   LoaderCircle,
-  LockKeyhole,
   ShieldCheck,
   UserPlus,
   MailCheck,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LogoMark } from "@/components/logo";
 import {
   Card,
   CardContent,
@@ -110,9 +110,7 @@ export function LoginScreen() {
 
       <div className="w-full max-w-sm space-y-6">
         <div className="flex items-center justify-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <LockKeyhole className="h-5 w-5" aria-hidden="true" />
-          </span>
+          <LogoMark className="h-10 w-10" />
           <div>
             <p className="text-lg font-semibold tracking-tight">Scriptly</p>
             <p className="text-xs text-muted-foreground">Área protegida</p>

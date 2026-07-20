@@ -89,11 +89,13 @@ function segmentosDoVideo(valor: unknown): Segmento[] {
 
 type NarracaoSincronizacaoSecaoProps = {
   video: VideoSalvo;
+  idioma: string;
   onVideoChange: (patch: Partial<VideoSalvo>) => void;
 };
 
 export function NarracaoSincronizacaoSecao({
   video,
+  idioma,
   onVideoChange,
 }: NarracaoSincronizacaoSecaoProps) {
   const { username } = useUsuarioAtual();
@@ -253,7 +255,7 @@ export function NarracaoSincronizacaoSecao({
       for (const bruto of brutos) {
         const samples = await audioBufferToMono16k(bruto.buffer);
         const texto = await transcribeSamples(samples, {
-          language: "portuguese",
+          language: idioma,
           onModelProgress: (pct) => {
             setModelPct(pct);
             if (pct >= 100) setModelPronto(true);

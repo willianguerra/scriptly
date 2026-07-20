@@ -40,6 +40,7 @@ import {
   type DadosCanal,
 } from "@/lib/channels/client";
 import { listarPrompts } from "@/lib/prompt-api";
+import { IDIOMAS, normalizarIdioma } from "@/lib/idiomas";
 import type { CanalSalvo } from "@/types/channel";
 import type { PromptSalvo } from "@/types/prompt";
 
@@ -50,6 +51,7 @@ const VAZIO: DadosCanal = {
   handle: "",
   descricao: "",
   nicho: "",
+  idioma: "portuguese",
   promptSistemaPadrao: "",
   defaultPromptId: null,
 };
@@ -94,6 +96,7 @@ export function CanaisLista() {
       handle: c.handle ?? "",
       descricao: c.descricao ?? "",
       nicho: c.nicho ?? "",
+      idioma: normalizarIdioma(c.idioma),
       promptSistemaPadrao: c.promptSistemaPadrao ?? "",
       defaultPromptId: c.defaultPromptId,
     });
@@ -271,6 +274,27 @@ export function CanaisLista() {
                   placeholder="Ex.: Curiosidades"
                 />
               </div>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="canal-idioma">Idioma da narração</Label>
+              <Select
+                value={normalizarIdioma(form.idioma)}
+                onValueChange={(v) => setForm({ ...form, idioma: v })}
+              >
+                <SelectTrigger id="canal-idioma" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {IDIOMAS.map((i) => (
+                    <SelectItem key={i.value} value={i.value}>
+                      {i.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Usado na sincronização para transcrever o áudio no idioma certo.
+              </p>
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="canal-descricao">Descrição</Label>

@@ -57,6 +57,8 @@ export type PipelineProgresso = {
 
 type PipelineOpts = {
   username: string;
+  /** Idioma da narração p/ o Whisper (nome em inglês ou "auto"). */
+  idioma: string;
   onProgress: (p: PipelineProgresso) => void;
   onPatch?: (patch: Partial<VideoSalvo>) => void;
 };
@@ -73,7 +75,7 @@ function idMsg() {
  */
 export async function executarPipeline(
   video: VideoSalvo,
-  { username, onProgress, onPatch }: PipelineOpts
+  { username, idioma, onProgress, onPatch }: PipelineOpts
 ): Promise<void> {
   const provider = normalizarProvider(video.provider);
 
@@ -139,7 +141,7 @@ export async function executarPipeline(
     for (const bruto of brutos) {
       const samples = await audioBufferToMono16k(bruto.buffer);
       const texto = await transcribeSamples(samples, {
-        language: "portuguese",
+        language: idioma,
         onModelProgress: (pct) => {
           if (pct < 100) {
             onProgress({
@@ -166,7 +168,7 @@ export async function executarPipeline(
   await atualizarVideo(video.id, { segmentos, timings, srt });
   onPatch?.({ segmentos, timings, srt });
 
-  // 4) Prompts de cena — agente DOTTI em 3 etapas (análise → referências → cenas).
+  // 4) Prompts de cena — agente Scriptly em 3 etapas (análise → referências → cenas).
   onProgress({ etapa: "prompts", detalhe: "análise" });
   const sincronizacao = segmentosParaTexto(segmentos, timings.duracao);
   let mensagens: MensagemChatPrompts[] = [];

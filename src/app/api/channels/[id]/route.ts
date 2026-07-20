@@ -12,6 +12,7 @@ const updateSchema = z.object({
   handle: z.string().trim().max(100).nullable().optional(),
   descricao: z.string().max(2_000).nullable().optional(),
   nicho: z.string().trim().max(200).nullable().optional(),
+  idioma: z.string().trim().max(40).nullable().optional(),
   promptSistemaPadrao: z.string().max(20_000).nullable().optional(),
   defaultPromptId: z.string().nullable().optional(),
 });

@@ -21,6 +21,7 @@ import {
 import type { SessionRole } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { LogoMark } from "@/components/logo";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
 import {
   Sheet,
@@ -72,9 +73,7 @@ const adminItem: ToolItem = {
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
-      <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-primary to-accent-foreground text-primary-foreground font-bold text-sm shadow-sm">
-        S
-      </div>
+      <LogoMark className="h-8 w-8 shadow-sm" />
       <span className="text-base font-semibold tracking-tight">Scriptly</span>
     </Link>
   );

@@ -12,6 +12,7 @@ const channelSchema = z.object({
   handle: z.string().trim().max(100).optional(),
   descricao: z.string().max(2_000).optional(),
   nicho: z.string().trim().max(200).optional(),
+  idioma: z.string().trim().max(40).optional(),
   promptSistemaPadrao: z.string().max(20_000).optional(),
   defaultPromptId: z.string().nullable().optional(),
 });
@@ -27,6 +28,7 @@ type ChannelRow = {
   handle: string | null;
   descricao: string | null;
   nicho: string | null;
+  idioma: string | null;
   promptSistemaPadrao: string | null;
   defaultPromptId: string | null;
   defaultPrompt: { id: string; nome: string; texto: string } | null;
@@ -41,6 +43,7 @@ export function toDTO(c: ChannelRow): CanalSalvo {
     handle: c.handle,
     descricao: c.descricao,
     nicho: c.nicho,
+    idioma: c.idioma,
     promptSistemaPadrao: c.promptSistemaPadrao,
     defaultPromptId: c.defaultPromptId,
     defaultPromptNome: c.defaultPrompt?.nome ?? null,
@@ -113,6 +116,7 @@ export async function POST(req: Request) {
       handle: limpar(parsed.data.handle),
       descricao: limpar(parsed.data.descricao),
       nicho: limpar(parsed.data.nicho),
+      idioma: limpar(parsed.data.idioma),
       promptSistemaPadrao: limpar(parsed.data.promptSistemaPadrao),
       defaultPromptId,
     },

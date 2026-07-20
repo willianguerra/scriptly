@@ -227,7 +227,7 @@ export function buildPromptTextExport(
 
   const cabecalho = [
     linha,
-    `SINCRONIZAÇÃO DOTTI SYNC - GROK ${segmentSeconds}s - BLOCOS DE ${segmentSeconds}s`,
+    `SINCRONIZAÇÃO SCRIPTLY SYNC - GROK ${segmentSeconds}s - BLOCOS DE ${segmentSeconds}s`,
     linha,
     `Arquivo: ${fileName}`,
     `Duração: ${formatTime(duration)}`,

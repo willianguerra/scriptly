@@ -8,6 +8,7 @@ export interface DadosCanal {
   handle?: string | null;
   descricao?: string | null;
   nicho?: string | null;
+  idioma?: string | null;
   promptSistemaPadrao?: string | null;
   defaultPromptId?: string | null;
 }

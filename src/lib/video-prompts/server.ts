@@ -1,5 +1,5 @@
 import type { ProviderRoteiro } from "../roteiro/types.ts";
-import { DOTTI_AGENT_SYSTEM } from "./agent.ts";
+import { SCRIPTLY_AGENT_SYSTEM } from "./agent.ts";
 import {
   montarContextoDoProjeto,
   montarInstrucaoDaEtapa,
@@ -36,7 +36,7 @@ type GeminiContent = {
 };
 
 function sistemaComContexto(entrada: EntradaRespostaAgente): string {
-  return `${DOTTI_AGENT_SYSTEM}\n\n${montarContextoDoProjeto(entrada)}`;
+  return `${SCRIPTLY_AGENT_SYSTEM}\n\n${montarContextoDoProjeto(entrada)}`;
 }
 
 function historicoValido(mensagens: MensagemChatPrompts[]) {
@@ -112,7 +112,7 @@ ${prompts.join("\n\n")}
 
 ===============================================================================
 TOTAL: ${prompts.length} prompts gerados
-VERSÃO: DOTTI AGENT 2.0
+VERSÃO: Scriptly Agent 2.0
 ===============================================================================`;
     }
     case "gestao":
@@ -274,7 +274,7 @@ export async function gerarRespostaDoAgente(
   montarContextoDoProjeto(entrada);
 
   if (entrada.provider === "fake") {
-    return { texto: respostaFake(entrada), provider: "fake", modelo: "fake-dotti-2" };
+    return { texto: respostaFake(entrada), provider: "fake", modelo: "fake-scriptly-2" };
   }
   if (!entrada.chave) {
     throw new Error(

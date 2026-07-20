@@ -5,6 +5,7 @@ export interface CanalSalvo {
   handle: string | null;
   descricao: string | null;
   nicho: string | null;
+  idioma: string | null;
   promptSistemaPadrao: string | null;
   /** Prompt da biblioteca usado como padrão dos vídeos deste canal. */
   defaultPromptId: string | null;

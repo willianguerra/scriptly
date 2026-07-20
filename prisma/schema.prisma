@@ -55,6 +55,7 @@ model Channel {
   handle              String?
   descricao           String?
   nicho               String?
+  idioma              String?
   promptSistemaPadrao String?
   defaultPromptId     String?
   defaultPrompt       Prompt?  @relation("ChannelDefaultPrompt", fields: [defaultPromptId], references: [id], onDelete: SetNull)
