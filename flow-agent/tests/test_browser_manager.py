@@ -132,6 +132,7 @@ def test_open_uses_a_persistent_profile_and_is_idempotent(tmp_path: Path) -> Non
         assert playwright.chromium.calls[0] == {
             "user_data_dir": str((tmp_path / "profiles" / "video").resolve()),
             "headless": True,
+            "accept_downloads": True,
         }
         assert context.navigation_timeout == 60_000
         assert (await manager.get_status()).running is True
@@ -201,6 +202,28 @@ def test_open_flow_navigates_to_the_configured_url(tmp_path: Path) -> None:
         assert context.pages[0].brought_to_front is True
         assert manager.flow_opened is True
         await manager.close()
+
+    asyncio.run(scenario())
+
+
+def test_get_flow_page_returns_the_active_page(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        manager, _, context = make_manager(tmp_path)
+        await manager.open()
+        await manager.open_flow()
+
+        assert await manager.get_flow_page() is context.pages[0]
+        await manager.close()
+
+    asyncio.run(scenario())
+
+
+def test_get_flow_page_requires_flow_to_be_open(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        manager, _, _ = make_manager(tmp_path)
+
+        with pytest.raises(BrowserNotRunningError):
+            await manager.get_flow_page()
 
     asyncio.run(scenario())
 

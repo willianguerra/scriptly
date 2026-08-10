@@ -14,6 +14,10 @@ from app.automation.browser.profiles import (
 )
 
 
+def default_downloads_directory() -> Path:
+    return (Path.home() / "Documents" / "Scriptly" / "Downloads" / "debug").resolve()
+
+
 class Settings(BaseSettings):
     """Configuration loaded from FLOW_AGENT_* environment variables."""
 
@@ -35,6 +39,8 @@ class Settings(BaseSettings):
     browser_headless: bool = False
     flow_url: AnyHttpUrl = "https://labs.google/fx/tools/flow"
     navigation_timeout_ms: int = Field(default=60_000, ge=1_000, le=300_000)
+    generation_timeout_seconds: int = Field(default=900, ge=30, le=3_600)
+    downloads_dir: Path = Field(default_factory=default_downloads_directory)
 
     @field_validator("host")
     @classmethod
@@ -86,6 +92,10 @@ class Settings(BaseSettings):
     @property
     def allowed_cors_origins(self) -> tuple[str, ...]:
         return tuple(self.cors_origins.split(","))
+
+    @property
+    def error_logs_dir(self) -> Path:
+        return self.data_dir / "logs" / "errors"
 
 
 @lru_cache

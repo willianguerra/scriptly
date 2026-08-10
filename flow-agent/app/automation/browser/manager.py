@@ -76,6 +76,7 @@ class BrowserManager:
                 context = await self._playwright.chromium.launch_persistent_context(
                     user_data_dir=str(profile_path),
                     headless=self._settings.browser_headless,
+                    accept_downloads=True,
                 )
                 context.set_default_navigation_timeout(
                     self._settings.navigation_timeout_ms
@@ -156,6 +157,13 @@ class BrowserManager:
                 if isinstance(error, FlowNavigationError):
                     raise
                 raise FlowNavigationError("failed to navigate to Google Flow") from error
+
+    async def get_flow_page(self) -> Any:
+        async with self._lock:
+            page = self._flow_page
+            if self._context is None or page is None or page.is_closed():
+                raise BrowserNotRunningError("Google Flow page is not open")
+            return page
 
     async def _stop_playwright(self) -> None:
         playwright = self._playwright

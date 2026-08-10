@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -16,6 +18,8 @@ ENVIRONMENT_VARIABLES = (
     "FLOW_AGENT_BROWSER_HEADLESS",
     "FLOW_AGENT_FLOW_URL",
     "FLOW_AGENT_NAVIGATION_TIMEOUT_MS",
+    "FLOW_AGENT_GENERATION_TIMEOUT_SECONDS",
+    "FLOW_AGENT_DOWNLOADS_DIR",
 )
 
 
@@ -39,6 +43,9 @@ def test_settings_use_loopback_defaults(monkeypatch: pytest.MonkeyPatch) -> None
     assert settings.browser_headless is False
     assert str(settings.flow_url) == "https://labs.google/fx/tools/flow"
     assert settings.navigation_timeout_ms == 60_000
+    assert settings.generation_timeout_seconds == 900
+    assert settings.downloads_dir.name == "debug"
+    assert settings.error_logs_dir == settings.data_dir / "logs" / "errors"
 
 
 def test_settings_read_flow_agent_environment(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -47,6 +54,8 @@ def test_settings_read_flow_agent_environment(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setenv("FLOW_AGENT_CORS_ORIGINS", "http://localhost:4000")
     monkeypatch.setenv("FLOW_AGENT_BROWSER_PROFILE", "images")
     monkeypatch.setenv("FLOW_AGENT_BROWSER_HEADLESS", "true")
+    monkeypatch.setenv("FLOW_AGENT_GENERATION_TIMEOUT_SECONDS", "120")
+    monkeypatch.setenv("FLOW_AGENT_DOWNLOADS_DIR", "custom-downloads")
 
     settings = Settings(_env_file=None)
 
@@ -54,6 +63,8 @@ def test_settings_read_flow_agent_environment(monkeypatch: pytest.MonkeyPatch) -
     assert settings.allowed_cors_origins == ("http://localhost:4000",)
     assert settings.browser_profile == "images"
     assert settings.browser_headless is True
+    assert settings.generation_timeout_seconds == 120
+    assert settings.downloads_dir == Path("custom-downloads")
 
 
 def test_settings_reject_non_loopback_bind_address(

@@ -1,19 +1,17 @@
 # Scriptly Flow Agent
 
-Serviço Python local que mantém um Chromium persistente para o usuário abrir o
-Google Flow e fazer login manualmente. Esta fase controla somente o ciclo de vida
-do navegador e a abertura da página. Não há automação de login, geração, download,
-fila, WebSocket ou integração com Prisma.
+Serviço Python local que mantém um Chromium persistente e oferece uma prova de conceito
+para gerar um único vídeo no Google Flow e baixá-lo como MP4. A autenticação continua
+manual. Esta fase não possui Prisma, fila, WebSocket, imagens nem integração com a
+interface Next.js.
 
-## Requisitos
+## Requisitos e instalação
 
 - Python 3.12 ou superior;
-- acesso local à porta configurada;
-- Chromium instalado pelo Playwright.
+- Chromium instalado pelo Playwright;
+- uma sessão Google Flow autenticada manualmente no profile persistente.
 
-## Instalação e execução
-
-Execute a partir da raiz do repositório:
+Na raiz do repositório:
 
 ```bash
 cd flow-agent
@@ -23,158 +21,129 @@ playwright install chromium
 uvicorn app.main:app --host 127.0.0.1 --port 8765
 ```
 
-Ative o ambiente virtual antes de `pip`, `playwright` e `uvicorn`. No Windows
-PowerShell:
+No Windows PowerShell, ative o ambiente com:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-Também é possível iniciar usando todas as configurações do ambiente:
+Também é possível iniciar com `python -m app.main`. O Agent aceita somente endereços de
+loopback e usa `127.0.0.1:8765` por padrão; `0.0.0.0` é rejeitado.
 
-```bash
-python -m app.main
-```
+## Profile e login manual
 
-Por segurança, o Agent aceita apenas endereços de loopback e usa
-`127.0.0.1:8765` como padrão. `0.0.0.0` é rejeitado. Requisições mutáveis que
-informem um `Origin` não configurado também são rejeitadas.
-
-## Profile persistente e login manual
-
-O Browser Manager usa `launch_persistent_context` do Playwright. O Chromium
-mantém cookies e armazenamento do site diretamente no próprio profile; o Agent
-não exporta cookies para JSON e não recebe usuário, senha, 2FA ou CAPTCHA.
-
-No Windows, o profile padrão fica em:
+O Browser Manager usa `launch_persistent_context`. Cookies e armazenamento permanecem no
+profile do Chromium; o Agent não exporta cookies nem recebe usuário, senha, 2FA ou
+CAPTCHA. No Windows, o profile padrão fica em:
 
 ```text
 %LOCALAPPDATA%\ScriptlyFlowAgent\profiles\video
 ```
 
-O diretório também pode ser definido por `FLOW_AGENT_DATA_DIR`, mas deve ficar
-fora do código-fonte. Um mesmo profile não deve ser aberto simultaneamente por
-mais de uma instância do Agent.
+Não abra duas instâncias do Agent com o mesmo profile. Se a sessão expirar ou o Flow
+pedir interação humana, a geração termina como `AUTH_REQUIRED` para o usuário resolver
+manualmente na janela visível.
+
+## Proteção de custo zero
+
+A POC seleciona somente:
+
+- `Vídeo`;
+- `Veo 3.1 - Lite [Lower Priority]`;
+- `4s`;
+- `16:9`;
+- `x1`.
+
+Antes de enviar o prompt, o Agent lê o custo exibido pelo Flow. Somente o valor exato
+`0 créditos` permite o clique. Valor positivo, ausente ou ilegível retorna
+`NON_ZERO_OR_UNKNOWN_COST` sem iniciar a geração. Como a interface externa pode mudar,
+confirme visualmente o custo antes de qualquer validação manual.
 
 ## Endpoints
 
-### `GET /health`
+- `GET /health` — saúde e versão do Agent;
+- `GET /status` — estado do Agent, browser e Flow;
+- `POST /browser/open` — abre/reutiliza o Chromium persistente;
+- `POST /browser/close` — fecha contexto e Playwright;
+- `GET /browser/status` — estado e profile;
+- `POST /flow/open` — abre a URL oficial configurada;
+- `POST /debug/generate-video` — executa uma geração de vídeo por vez.
+
+Exemplo de geração:
+
+```powershell
+$body = @{ prompt = "Ocean waves at sunrise" } | ConvertTo-Json
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8765/debug/generate-video `
+  -ContentType application/json `
+  -Body $body
+```
+
+Sucesso:
 
 ```json
 {
-  "status": "ok",
-  "service": "scriptly-flow-agent",
-  "version": "0.2.0"
+  "status": "completed",
+  "file": "C:\\Users\\...\\Documents\\Scriptly\\Downloads\\debug\\0001.mp4",
+  "duration_seconds": 123.0
 }
 ```
 
-### `GET /status`
+Falhas operacionais retornam HTTP 200 com `status: "failed"`, `error_code` e
+`error_message`. Entrada inválida retorna `422`. Uma chamada concorrente retorna `BUSY`;
+não existe fila nesta fase.
 
-Antes da abertura do navegador:
+## Arquivos e diagnósticos
 
-```json
-{
-  "agent": "ready",
-  "browser": "stopped",
-  "flow": "unknown"
-}
+Downloads usam nomes previsíveis e nunca sobrescrevem um arquivo existente:
+
+```text
+%USERPROFILE%\Documents\Scriptly\Downloads\debug\0001.mp4
 ```
 
-Depois de abrir o navegador e o Flow:
+Em falhas, screenshots e metadados sanitizados ficam em:
 
-```json
-{
-  "agent": "ready",
-  "browser": "running",
-  "flow": "opened"
-}
+```text
+%LOCALAPPDATA%\ScriptlyFlowAgent\logs\errors
 ```
 
-### `POST /browser/open`
-
-Abre ou reutiliza o Chromium associado ao profile configurado.
-
-```json
-{ "status": "opened" }
-```
-
-### `POST /browser/close`
-
-Fecha corretamente o contexto persistente e o Playwright. A operação é
-idempotente.
-
-```json
-{ "status": "closed" }
-```
-
-### `GET /browser/status`
-
-```json
-{
-  "running": true,
-  "profile": "video"
-}
-```
-
-### `POST /flow/open`
-
-Com o navegador aberto, navega uma aba para a URL configurada do Google Flow.
-Se o browser estiver parado, retorna `409 BROWSER_NOT_RUNNING`. A autenticação na
-página é sempre manual.
-
-```json
-{ "status": "opened" }
-```
+O JSON de diagnóstico e os logs contêm estado, histórico, erro e URL sem query/fragment;
+eles não armazenam prompt, cookies, HTML ou credenciais. A screenshot é local e pode
+registrar o conteúdo visível na página, por isso deve ser tratada como dado sensível.
 
 ## Configuração
 
-Copie `.env.example` para `.env` ou defina as variáveis no ambiente. O arquivo
-`.env` não deve ser versionado.
+Copie `.env.example` para `.env` ou defina variáveis `FLOW_AGENT_*` no ambiente.
 
 | Variável | Padrão | Finalidade |
 | --- | --- | --- |
-| `FLOW_AGENT_HOST` | `127.0.0.1` | Endereço de loopback do serviço |
-| `FLOW_AGENT_PORT` | `8765` | Porta TCP local |
-| `FLOW_AGENT_CORS_ORIGINS` | `http://127.0.0.1:3000,http://localhost:3000` | Origens Scriptly permitidas |
-| `FLOW_AGENT_LOG_LEVEL` | `INFO` | Nível de logging |
-| `FLOW_AGENT_DATA_DIR` | diretório local do sistema | Raiz dos dados persistentes, fora do código |
-| `FLOW_AGENT_BROWSER_PROFILE` | `video` | Nome seguro do profile Chromium |
-| `FLOW_AGENT_BROWSER_HEADLESS` | `false` | Mantém a janela visível para login manual |
-| `FLOW_AGENT_FLOW_URL` | `https://labs.google/fx/tools/flow` | URL HTTPS oficial do Flow |
-| `FLOW_AGENT_NAVIGATION_TIMEOUT_MS` | `60000` | Timeout de navegação, entre 1 e 300 segundos |
+| `FLOW_AGENT_HOST` | `127.0.0.1` | Endereço de loopback |
+| `FLOW_AGENT_PORT` | `8765` | Porta local |
+| `FLOW_AGENT_CORS_ORIGINS` | origins locais na porta 3000 | CORS explícito |
+| `FLOW_AGENT_LOG_LEVEL` | `INFO` | Nível de log |
+| `FLOW_AGENT_DATA_DIR` | diretório local do sistema | Profile e logs |
+| `FLOW_AGENT_BROWSER_PROFILE` | `video` | Nome do profile |
+| `FLOW_AGENT_BROWSER_HEADLESS` | `false` | Janela visível para interação manual |
+| `FLOW_AGENT_FLOW_URL` | URL HTTPS oficial | Endereço do Flow |
+| `FLOW_AGENT_NAVIGATION_TIMEOUT_MS` | `60000` | Timeout de navegação/UI |
+| `FLOW_AGENT_GENERATION_TIMEOUT_SECONDS` | `900` | Timeout da geração gratuita |
+| `FLOW_AGENT_DOWNLOADS_DIR` | Documents/Scriptly/Downloads/debug | Saída de MP4 |
 
-O CORS não aceita wildcard, não permite credenciais cross-origin e libera apenas
-`GET` e `POST` para as origens configuradas.
-
-## Validação manual da sessão
-
-Com o Agent em execução, use outro terminal PowerShell:
-
-```powershell
-Invoke-RestMethod -Method Post http://127.0.0.1:8765/browser/open
-Invoke-RestMethod -Method Post http://127.0.0.1:8765/flow/open
-Invoke-RestMethod http://127.0.0.1:8765/status
-```
-
-Na janela aberta, faça login manualmente no Google. Depois:
-
-1. feche o Agent com `Ctrl+C`, permitindo que o lifecycle encerre o contexto;
-2. inicie novamente o mesmo comando `uvicorn`;
-3. execute `POST /browser/open` e `POST /flow/open` novamente;
-4. confirme visualmente que a sessão continua autenticada;
-5. finalize com `POST /browser/close`.
-
-Não execute duas instâncias usando o profile `video` ao mesmo tempo.
-
-## Testes
-
-Instale o extra de desenvolvimento e execute:
+## Testes sem consumo de créditos
 
 ```bash
 pip install -e ".[test]"
 pytest
 ```
 
-Os testes unitários usam doubles do Playwright e não acessam o Google Flow. O
-smoke test manual descrito acima é responsável por verificar a janela real e a
-persistência da sessão.
+Os testes usam doubles e não acessam o Google Flow. Para preparar a aceitação pedida de
+dez gerações reais, primeiro confirme visualmente `0 créditos` e execute, de forma
+deliberada:
+
+```powershell
+python scripts/validate_debug_generations.py --confirm-zero-credits
+```
+
+O script faz chamadas estritamente sequenciais, valida arquivos distintos e interrompe
+no primeiro erro. Ele não é executado pela suíte automática.

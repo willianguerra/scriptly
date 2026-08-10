@@ -9,8 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.browser import router as browser_router
+from app.api.debug import router as debug_router
 from app.api.health import router as health_router
 from app.automation.browser.manager import BrowserManager
+from app.automation.flow.provider import FlowProvider
 from app.config import Settings, get_settings
 
 
@@ -24,10 +26,15 @@ def configure_logging(level: str) -> None:
 def create_app(
     settings: Settings | None = None,
     browser_manager: Any | None = None,
+    flow_provider: Any | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     configure_logging(resolved_settings.log_level)
     resolved_browser_manager = browser_manager or BrowserManager(resolved_settings)
+    resolved_flow_provider = flow_provider or FlowProvider(
+        resolved_browser_manager,
+        resolved_settings,
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -41,6 +48,7 @@ def create_app(
     )
     application.state.settings = resolved_settings
     application.state.browser_manager = resolved_browser_manager
+    application.state.flow_provider = resolved_flow_provider
 
     @application.middleware("http")
     async def reject_untrusted_mutating_origin(
@@ -73,6 +81,7 @@ def create_app(
     )
     application.include_router(health_router)
     application.include_router(browser_router)
+    application.include_router(debug_router)
     return application
 
 

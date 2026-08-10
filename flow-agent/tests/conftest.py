@@ -12,7 +12,7 @@ from app.main import create_app
 def client() -> Generator[TestClient]:
     settings = Settings(
         service_name="scriptly-flow-agent",
-        version="0.2.0",
+        version="0.3.0",
         host="127.0.0.1",
         port=8765,
         cors_origins="http://127.0.0.1:3000,http://localhost:3000",
