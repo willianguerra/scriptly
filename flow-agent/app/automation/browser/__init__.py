@@ -1,0 +1,1 @@
+"""Persistent Chromium lifecycle management."""
