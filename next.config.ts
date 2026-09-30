@@ -17,8 +17,8 @@ const nextConfig: NextConfig = {
               "font-src 'self' data:",
               "form-action 'self'",
               "frame-ancestors 'none'",
-              "img-src 'self' data: blob:",
-              "media-src 'self' blob:",
+              "img-src 'self' data: blob: https://images.pexels.com https://videos.pexels.com",
+              "media-src 'self' blob: https://videos.pexels.com",
               "object-src 'none'",
               // 'blob:' é necessário para o onnxruntime-web (backend WASM do
               // Whisper via transformers.js), que instancia scripts/worker a

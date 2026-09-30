@@ -1,0 +1,80 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-scriptly}
+      POSTGRES_USER: ${POSTGRES_USER:-scriptly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-scriptly} -d ${POSTGRES_DB:-scriptly}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  db-push:
+    build: .
+    command: ["npm", "run", "db:push"]
+    environment: &app-environment
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-scriptly}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-scriptly}?schema=public"
+      DIRECT_URL: "postgresql://${POSTGRES_USER:-scriptly}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-scriptly}?schema=public"
+      AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?Defina AUTH_SESSION_SECRET no .env}
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?Defina APP_ENCRYPTION_KEY no .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      AUTH_USERNAME: ${AUTH_USERNAME:-admin}
+      AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH:-}
+      DARKVI_API_TOKEN: ${DARKVI_API_TOKEN:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      PEXELS_API_KEY: ${PEXELS_API_KEY:-}
+      VOICESTUDIO_BASE_URL: ${VOICESTUDIO_BASE_URL:-}
+      VOICESTUDIO_API_KEY: ${VOICESTUDIO_API_KEY:-}
+      VOICESTUDIO_MODEL: ${VOICESTUDIO_MODEL:-tts-1}
+      MEDIA_STORAGE_DIR: /app/storage/media
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - media_data:/app/storage/media
+    depends_on:
+      db-push:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  worker:
+    build: .
+    command: ["npm", "run", "worker:production"]
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      PEXELS_API_KEY: ${PEXELS_API_KEY:-}
+      VOICESTUDIO_BASE_URL: ${VOICESTUDIO_BASE_URL:-}
+      VOICESTUDIO_API_KEY: ${VOICESTUDIO_API_KEY:-}
+      VOICESTUDIO_MODEL: ${VOICESTUDIO_MODEL:-tts-1}
+      MEDIA_STORAGE_DIR: /app/storage/media
+    volumes:
+      - media_data:/app/storage/media
+    depends_on:
+      db-push:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
+  media_data:

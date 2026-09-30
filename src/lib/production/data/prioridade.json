@@ -1,0 +1,10 @@
+{
+  "seedType": "demo-configuravel",
+  "elements": {
+    "title": 400,
+    "callout": 300,
+    "caption": 200,
+    "subtitle": 100
+  },
+  "tieBreak": "id-asc"
+}

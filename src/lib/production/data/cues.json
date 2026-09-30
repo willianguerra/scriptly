@@ -1,0 +1,13 @@
+{
+  "seedType": "demo-configuravel",
+  "musicFadeInSeconds": 1.5,
+  "musicFadeOutSeconds": 2,
+  "ducking": 0.4,
+  "duckAttackMs": 20,
+  "duckReleaseMs": 500,
+  "effectStartSeconds": 0,
+  "duckThreshold": 0.05,
+  "duckRatioMultiplier": 19,
+  "titleDurationSeconds": 3,
+  "limiter": 0.95
+}

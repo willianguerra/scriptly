@@ -11,6 +11,7 @@ import {
   Split,
   AudioLines,
   Clapperboard,
+  Film,
   Library,
   Menu,
   ChevronRight,
@@ -46,6 +47,7 @@ type ToolItem = {
 
 const mainTools: ToolItem[] = [
   { href: "/", label: "Canais", icon: Clapperboard },
+  { href: "/estudio", label: "Estúdio de vídeo", icon: Film },
   { href: "/prompts", label: "Biblioteca de Prompts", icon: Library },
 ];
 

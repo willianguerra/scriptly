@@ -41,6 +41,8 @@ model User {
   prompts      Prompt[]
   credentials  ApiCredential[]
   channels     Channel[]
+  productionProjects ProductionProject[]
+  productionJobs ProductionJob[]
 
   @@index([status])
 }
@@ -122,4 +124,57 @@ model ApiCredential {
   updatedAt  DateTime @updatedAt
 
   @@unique([userId, provider])
+}
+
+/// Projeto persistente do estúdio de produção audiovisual.
+model ProductionProject {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  brief         String
+  script        String   @db.Text
+  language      String   @default("pt-BR")
+  provider      String   @default("openai")
+  targetSeconds Int      @default(600)
+  aspectRatio   String   @default("16:9")
+  style         String   @default("dossie")
+  status        String   @default("waiting")
+  stage         String   @default("script")
+  scenes        Json
+  narration     Json?
+  subtitles     String?  @db.Text
+  music         Json?
+  effects       Json?
+  renderSettings Json?
+  outputPath    String?
+  lastError     String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  jobs          ProductionJob[]
+
+  @@index([userId, updatedAt])
+}
+
+/// Job assíncrono executado pelo worker separado do servidor HTTP.
+model ProductionJob {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     ProductionProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        String
+  status      String   @default("waiting")
+  progress    Int      @default(0)
+  attempts    Int      @default(0)
+  input       Json?
+  outputPath  String?
+  error       String?  @db.Text
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, projectId])
 }
